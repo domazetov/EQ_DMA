@@ -26,7 +26,7 @@ int main(void)
 		return -1;
 	}
 	output = (int *)malloc(MAX_PKT_SIZE * sizeof(int));
-	p = (int *)mmap(0, 1024, PROT_READ | PROT_READ, MAP_SHARED, fd, 0);
+	p = (int *)mmap(0, 1024, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	memcpy(output, p, MAX_PKT_SIZE);
 	munmap(p, MAX_PKT_SIZE);
 	close(fd);

@@ -28,7 +28,7 @@ MODULE_ALIAS("custom:s2mm_dma controller");
 #define DEVICE_NAME "s2mm_dma"
 #define DRIVER_NAME "s2mm_dma_driver"
 #define BUFF_SIZE 20
-#define MAX_PKT_LEN 640 * 480 * 4
+#define MAX_PKT_LEN 1024
 
 //*******************FUNCTION PROTOTYPES************************************
 static int s2mm_dma_probe(struct platform_device *pdev);
@@ -41,9 +41,9 @@ static int __init s2mm_dma_init(void);
 static void __exit s2mm_dma_exit(void);
 static int s2mm_dma_remove(struct platform_device *pdev);
 
-static irqreturn_t dma_isr(int irq, void *dev_id);
+//static irqreturn_t dma_isr(int irq, void *dev_id);
 int dma_init(void __iomem *base_address);
-u32 dma_simple_read(dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
+u32 dma_simple_read(u32 RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
 
 //*********************GLOBAL VARIABLES*************************************
 struct s2mm_dma_info
@@ -51,7 +51,7 @@ struct s2mm_dma_info
 	unsigned long mem_start;
 	unsigned long mem_end;
 	void __iomem *base_addr;
-	int irq_num;
+	//int irq_num;
 };
 
 static struct cdev *my_cdev;
@@ -65,8 +65,8 @@ static struct file_operations my_fops =
 		.owner = THIS_MODULE,
 		.open = s2mm_dma_open,
 		.release = s2mm_dma_close,
-		.read = s2mm_dma_read,
-		.write = s2mm_dma_write,
+		//.read = s2mm_dma_read,
+		//.write = s2mm_dma_write,
 		.mmap = s2mm_dma_mmap};
 
 static struct of_device_id s2mm_dma_of_match[] = {
@@ -135,6 +135,7 @@ static int s2mm_dma_probe(struct platform_device *pdev)
 	}
 
 	// Get irq num
+	/*
 	vp->irq_num = platform_get_irq(pdev, 0);
 	if (!vp->irq_num)
 	{
@@ -142,7 +143,8 @@ static int s2mm_dma_probe(struct platform_device *pdev)
 		rc = -ENODEV;
 		goto error2;
 	}
-
+	*/
+	/*
 	if (request_irq(vp->irq_num, dma_isr, 0, DEVICE_NAME, NULL))
 	{
 		printk(KERN_ERR "s2mm_dma_probe: Could not register IRQ %d\n", vp->irq_num);
@@ -153,11 +155,11 @@ static int s2mm_dma_probe(struct platform_device *pdev)
 	{
 		printk(KERN_INFO "s2mm_dma_probe: Registered IRQ %d\n", vp->irq_num);
 	}
-
+*/
 	/* INIT DMA */
 	dma_init(vp->base_addr);
-	dma_simple_read(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
-
+	dma_simple_read(rx_vir_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
+	//dma_simple_read(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
 	printk(KERN_NOTICE "s2mm_dma_probe: s2mm platform driver registered\n");
 	return 0; //ALL OK
 
@@ -177,7 +179,7 @@ static int s2mm_dma_remove(struct platform_device *pdev)
 	printk(KERN_INFO "s2mm_dma_probe: resseting");
 	iowrite32(reset, vp->base_addr);
 
-	free_irq(vp->irq_num, NULL);
+	//free_irq(vp->irq_num, NULL);
 	iounmap(vp->base_addr);
 	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 	kfree(vp);
@@ -198,7 +200,7 @@ static int s2mm_dma_close(struct inode *i, struct file *f)
 	//printk(KERN_INFO "s2mm_dma closed\n");
 	return 0;
 }
-
+/*
 static ssize_t s2mm_dma_read(struct file *f, char __user *buf, size_t length, loff_t *off)
 {
 	int ret;
@@ -222,13 +224,13 @@ static ssize_t s2mm_dma_write(struct file *f, const char __user *buf, size_t len
 	//printk("s2mm_dma write\n");
 	return 0;
 }
-
+*/
 static ssize_t s2mm_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 {
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
 
-	//printk(KERN_INFO "DMA RX Buffer is being memory mapped\n");
+	printk(KERN_INFO "DMA RX Buffer is being memory mapped\n");
 
 	if (length > MAX_PKT_LEN)
 	{
@@ -247,50 +249,49 @@ static ssize_t s2mm_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 
 /****************************************************/
 // IMPLEMENTATION OF DMA related functions
-
+/*
 static irqreturn_t dma_isr(int irq, void *dev_id)
 {
 	u32 IrqStatus;
-	/* Read pending interrupts */
+	//Read pending interrupts
 	IrqStatus = ioread32(vp->base_addr + 4);			  //read irq status from S2MM_DMASR register
 	iowrite32(IrqStatus | 0x00007000, vp->base_addr + 4); //clear irq status in S2MM_DMASR register
 	//(clearing is done by writing 1 on 13. bit in S2MM_DMASR (IOC_Irq)
 
-	/*Send a transaction*/
+	//Send a transaction
 	//dma_simple_read(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
 	printk(KERN_INFO "S2MM DMA Interrupt Detected");
 	return IRQ_HANDLED;
 	;
-}
-
+}*/
 int dma_init(void __iomem *base_address)
 {
 	u32 reset = 0x00000004;
-	u32 IOC_IRQ_EN;
-	u32 ERR_IRQ_EN;
-	u32 S2MM_DMACR_reg;
-	u32 en_interrupt;
+	//u32 IOC_IRQ_EN;
+	//u32 ERR_IRQ_EN;
+	//u32 S2MM_DMACR_reg;
+	//u32 en_interrupt;
 
-	IOC_IRQ_EN = 1 << 12; // this is IOC_IrqEn bit in S2MM_DMACR register
-	ERR_IRQ_EN = 1 << 14; // this is Err_IrqEn bit in S2MM_DMACR register
+	//IOC_IRQ_EN = 1 << 12; // this is IOC_IrqEn bit in S2MM_DMACR register
+	//ERR_IRQ_EN = 1 << 14; // this is Err_IrqEn bit in S2MM_DMACR register
 
 	iowrite32(reset, base_address); // writing to S2MM_DMACR register. Seting reset bit (3. bit)
 
-	S2MM_DMACR_reg = ioread32(base_address);				 // Reading from S2MM_DMACR register inside DMA
-	en_interrupt = S2MM_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in S2MM_DMACR
-	iowrite32(en_interrupt, base_address);					 // writing to S2MM_DMACR register
+	//S2MM_DMACR_reg = ioread32(base_address);				 // Reading from S2MM_DMACR register inside DMA
+	//en_interrupt = S2MM_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in S2MM_DMACR
+	//iowrite32(en_interrupt, base_address);					 // writing to S2MM_DMACR register
 	return 0;
 }
 
-u32 dma_simple_read(dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address)
-{
+u32 dma_simple_read(u32 RxBufferPtr, u32 max_pkt_len, void __iomem *base_address)
+{ //dma_addr_t
 	u32 S2MM_DMACR_reg;
 
 	S2MM_DMACR_reg = ioread32(base_address); // READ from S2MM_DMACR register
 
 	iowrite32(0x1 | S2MM_DMACR_reg, base_address); // set RS bit in S2MM_DMACR register (this bit starts the DMA)
-
-	iowrite32((u32)RxBufferPtr, base_address + 24); // Write into S2MM_SA register the value of RxBufferPtr.
+	//iowrite32((u32)RxBufferPtr, base_address + 24);
+	iowrite32(RxBufferPtr, base_address + 24); // Write into S2MM_DA register the value of RxBufferPtr.
 	// With this, the DMA knows from where to start.
 
 	iowrite32(max_pkt_len, base_address + 40); // Write into S2MM_LENGTH register. This is the length of a tranaction.

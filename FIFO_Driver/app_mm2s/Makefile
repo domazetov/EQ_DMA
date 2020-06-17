@@ -1,8 +1,8 @@
 sources=$(wildcard *.c)
 objs=$(sources:.c=.o)
 
-all: app 
-app: $(objs)
+all: test_image 
+test_image: $(objs)
 	@echo "Building output binary.."
 	$(CC) -o $@ $(objs)
 %.o: %.c
@@ -16,7 +16,7 @@ app: $(objs)
 	sed 's,    \($*\)\.o[ :]*     ,    \1.o $@ :   ,   g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 clean:
-	@rm -f app *.o *.d*
+	@rm -f test_image *.o *.d*
 	@echo "Clean done.."
 
 -include $(sources:.c=.d)

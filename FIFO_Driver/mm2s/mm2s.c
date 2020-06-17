@@ -219,17 +219,9 @@ static ssize_t mm2s_dma_write(struct file *f, const char __user *buf, size_t len
 	}
 	buff[length] = '\0';
 
-	sscanf(buff, "%d", &value);
-
-	if (ret == 1) //checking for parsing error
-	{
-		printk(KERN_INFO "MM2S Succesfully wrote value %d", value);
-		tx_vir_buffer[0] = value;
-	}
-	else
-	{
-		printk(KERN_WARNING "MM2S Wrong command format\n");
-	}
+	ret = sscanf(buff, "%d", &value);
+	tx_vir_buffer[0] = value;
+	printk(KERN_INFO "MM2S Succesfully wrote value %d", value);
 	return length;
 }
 

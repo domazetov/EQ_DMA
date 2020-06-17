@@ -6,3 +6,13 @@ BOOT
 BOOT_FIFO
 project_2
 DMA.png
+app
+*.o
+*.cmd
+*.mod.c
+*.mod.o
+*.order
+.tmp_versions
+*.symvers
+*.ko
+*.d

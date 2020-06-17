@@ -5,8 +5,8 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include "test.h"
-#define MAX_PKT_SIZE 1024
+//#include "test.h"
+#define MAX_PKT_SIZE 4
 
 //comment to send pixels as commands via regular write function of char driver
 //leave uncommented to write directly to memory (faster)
@@ -19,15 +19,18 @@ int main(void)
 	// If memory map is defined send image directly via mmap
 	int fd;
 	int *p;
+	int image = 420;
 	fd = open("/dev/mm2s_dma", O_RDWR | O_NDELAY);
 	if (fd < 0)
 	{
 		printf("Cannot open /dev/mm2s_dev for write\n");
 		return -1;
 	}
-	p = (int *)mmap(0, 1024, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-	memcpy(p, image, MAX_PKT_SIZE);
+	printf("Size of image %d\n", sizeof(image));
+	p = (int *)mmap(0, 4, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	memcpy(p, &image, MAX_PKT_SIZE);
 	munmap(p, MAX_PKT_SIZE);
+	printf("Wrote %d to mm2s_dev\n", image);
 	close(fd);
 	if (fd < 0)
 	{

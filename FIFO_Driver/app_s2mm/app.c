@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#define MAX_PKT_SIZE 1024
+#define MAX_PKT_SIZE 4
 
 //comment to send pixels as commands via regular read function of char driver
 //leave uncommented to read directly to memory (faster)
@@ -18,16 +18,16 @@ int main(void)
 	// If memory map is defined send image directly via mmap
 	int fd;
 	int *p;
-	unsigned int *output;
+	int output;
 	fd = open("/dev/s2mm_dma", O_RDWR | O_NDELAY);
 	if (fd < 0)
 	{
 		printf("Cannot open /dev/s2mm_dev for read\n");
 		return -1;
 	}
-	output = (int *)malloc(MAX_PKT_SIZE * sizeof(int));
-	p = (int *)mmap(0, 1024, PROT_READ | PROT_READ, MAP_SHARED, fd, 0);
-	memcpy(output, p, MAX_PKT_SIZE);
+//	output = (int *)malloc(MAX_PKT_SIZE * sizeof(int));
+	p = (int *)mmap(0, 4, PROT_READ | PROT_READ, MAP_SHARED, fd, 0);
+	memcpy(&output, p, MAX_PKT_SIZE);
 	munmap(p, MAX_PKT_SIZE);
 	close(fd);
 
@@ -37,7 +37,7 @@ int main(void)
 		return -1;
 	}
 
-	printf("***********%d***********", output);
+	printf("***********%d***********\n", output);
 #else
 	// Send via regualar driver interface
 	FILE *fp;

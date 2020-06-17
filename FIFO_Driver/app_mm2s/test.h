@@ -1,2 +1,1 @@
-unsigned int image[] = 
-{123};
+int image[] = {4};

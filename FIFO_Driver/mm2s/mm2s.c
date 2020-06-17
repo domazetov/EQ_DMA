@@ -219,8 +219,9 @@ static ssize_t mm2s_dma_write(struct file *f, const char __user *buf, size_t len
 	}
 	buff[length] = '\0';
 
-	ret = sscanf(buff, "%d", &value);
-	tx_vir_buffer[0] = value;
+	sscanf(buff, "%d", &value);
+
+	tx_vir_buffer[0] = (u32)value;
 	printk(KERN_INFO "MM2S Succesfully wrote value %d", value);
 	return length;
 }

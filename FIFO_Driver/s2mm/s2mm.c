@@ -212,7 +212,7 @@ static ssize_t s2mm_dma_read(struct file *f, char __user *buf, size_t length, lo
 		printk("MM2S copy from user failed \n");
 		return -EFAULT;
 	}
-	printk(KERN_INFO "S2MM Succesfully read\n");
+	printk(KERN_INFO "S2MM Succesfully read value %s\n", buff);
 
 	return len;
 }

@@ -18,13 +18,14 @@ int main(void)
 	// If memory map is defined send image directly via mmap
 	int fd;
 	int *p;
-	unsigned int output;
+	unsigned int *output;
 	fd = open("/dev/s2mm_dma", O_RDWR | O_NDELAY);
 	if (fd < 0)
 	{
 		printf("Cannot open /dev/s2mm_dev for read\n");
 		return -1;
 	}
+	output = (int *)malloc(MAX_PKT_SIZE * sizeof(int));
 	p = (int *)mmap(0, 1024, PROT_READ | PROT_READ, MAP_SHARED, fd, 0);
 	memcpy(output, p, MAX_PKT_SIZE);
 	munmap(p, MAX_PKT_SIZE);

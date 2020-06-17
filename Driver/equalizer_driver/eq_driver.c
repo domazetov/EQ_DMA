@@ -49,7 +49,7 @@ static struct file_operations eq_fops =
 	.write = eq_write
 };
 static struct of_device_id eq_of_match[] = {
-	{ .compatible = "xlnx,equalizer", },
+	{ .compatible = "equalizer", },
 	{ /* end of list */ },
 };
 

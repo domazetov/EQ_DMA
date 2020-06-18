@@ -51,7 +51,7 @@ int main(void)
 	{
 		for (i = 0; i < 5; i++)
 		{
-			input = counter + i;
+			input[i] = counter + i;
 		}
 	}
 
@@ -66,7 +66,7 @@ int main(void)
 	{
 		for (i = 0; i < 5; i++)
 		{
-			printf("input: %d	output: %d", input[i], output[i])
+			printf("input: %d	output: %d", input[i], output[i]);
 		}
 	}
 

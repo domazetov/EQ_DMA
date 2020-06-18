@@ -43,7 +43,7 @@ static int s2mm_dma_remove(struct platform_device *pdev);
 
 //static irqreturn_t dma_isr(int irq, void *dev_id);
 int dma_init(void __iomem *base_address);
-u32 dma_simple_read(u32 RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
+u32 dma_simple_read(dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
 
 //*********************GLOBAL VARIABLES*************************************
 struct s2mm_dma_info
@@ -158,8 +158,8 @@ static int s2mm_dma_probe(struct platform_device *pdev)
 */
 	/* INIT DMA */
 	dma_init(vp->base_addr);
-	dma_simple_read(rx_vir_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
-	//dma_simple_read(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
+	dma_simple_read(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
+
 	printk(KERN_NOTICE "s2mm_dma_probe: s2mm platform driver registered\n");
 	return 0; //ALL OK
 
@@ -283,15 +283,15 @@ int dma_init(void __iomem *base_address)
 	return 0;
 }
 
-u32 dma_simple_read(u32 RxBufferPtr, u32 max_pkt_len, void __iomem *base_address)
-{ //dma_addr_t
+u32 dma_simple_read(dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address)
+{
 	u32 S2MM_DMACR_reg;
 
 	S2MM_DMACR_reg = ioread32(base_address); // READ from S2MM_DMACR register
 
 	iowrite32(0x1 | S2MM_DMACR_reg, base_address); // set RS bit in S2MM_DMACR register (this bit starts the DMA)
-	//iowrite32((u32)RxBufferPtr, base_address + 24);
-	iowrite32(RxBufferPtr, base_address + 24); // Write into S2MM_DA register the value of RxBufferPtr.
+
+	iowrite32((u32)RxBufferPtr, base_address + 24); // Write into S2MM_DA register the value of RxBufferPtr.
 	// With this, the DMA knows from where to start.
 
 	iowrite32(max_pkt_len, base_address + 40); // Write into S2MM_LENGTH register. This is the length of a tranaction.

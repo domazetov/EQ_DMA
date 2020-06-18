@@ -65,8 +65,8 @@ static struct file_operations my_fops =
 		.owner = THIS_MODULE,
 		.open = mm2s_dma_open,
 		.release = mm2s_dma_close,
-		.read = mm2s_dma_read,
-		.write = mm2s_dma_write,
+		//		.read = mm2s_dma_read,
+		//		.write = mm2s_dma_write,
 		.mmap = mm2s_dma_mmap};
 
 static struct of_device_id mm2s_dma_of_match[] = {
@@ -200,7 +200,7 @@ static int mm2s_dma_close(struct inode *i, struct file *f)
 	//printk(KERN_INFO "mm2s_dma closed\n");
 	return 0;
 }
-
+/*
 static ssize_t mm2s_dma_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
 	//printk("mm2s_dma read\n");
@@ -227,7 +227,7 @@ static ssize_t mm2s_dma_write(struct file *f, const char __user *buf, size_t len
 	printk(KERN_INFO "MM2S Succesfully wrote value %d", value);
 	return length;
 }
-
+*/
 static ssize_t mm2s_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 {
 	int ret = 0;

@@ -28,7 +28,7 @@ MODULE_ALIAS("custom:s2mm_dma controller");
 #define DEVICE_NAME "s2mm_dma"
 #define DRIVER_NAME "s2mm_dma_driver"
 #define BUFF_SIZE 20
-#define MAX_PKT_LEN 1024
+#define MAX_PKT_LEN 1024 * 4
 
 //*******************FUNCTION PROTOTYPES************************************
 static int s2mm_dma_probe(struct platform_device *pdev);
@@ -98,19 +98,19 @@ static int s2mm_dma_probe(struct platform_device *pdev)
 	struct resource *r_mem;
 	int rc = 0;
 
-	printk(KERN_INFO "s2mm_dma_probe: Probing\n");
+	printk(KERN_INFO "S2MM Probe: Probing\n");
 	// Get phisical register adress space from device tree
 	r_mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!r_mem)
 	{
-		printk(KERN_ALERT "s2mm_dma_probe: Failed to get reg resource\n");
+		printk(KERN_ALERT "S2MM Probe: Failed to get reg resource\n");
 		return -ENODEV;
 	}
 	// Get memory for structure s2mm_dma_info
 	vp = (struct s2mm_dma_info *)kmalloc(sizeof(struct s2mm_dma_info), GFP_KERNEL);
 	if (!vp)
 	{
-		printk(KERN_ALERT "s2mm_dma_probe: Could not allocate memory for structure s2mm_dma_info\n");
+		printk(KERN_ALERT "S2MM Probe: Could not allocate memory for structure s2mm_dma_info\n");
 		return -ENOMEM;
 	}
 	// Put phisical adresses in timer_info structure
@@ -120,7 +120,7 @@ static int s2mm_dma_probe(struct platform_device *pdev)
 	// Reserve that memory space for this driver
 	if (!request_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1, DRIVER_NAME))
 	{
-		printk(KERN_ALERT "s2mm_dma_probe: Could not lock memory region at %p\n", (void *)vp->mem_start);
+		printk(KERN_ALERT "S2MM Probe: Could not lock memory region at %p\n", (void *)vp->mem_start);
 		rc = -EBUSY;
 		goto error1;
 	}
@@ -129,7 +129,7 @@ static int s2mm_dma_probe(struct platform_device *pdev)
 	vp->base_addr = ioremap(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 	if (!vp->base_addr)
 	{
-		printk(KERN_ALERT "s2mm_dma_probe: Could not allocate memory for remapping\n");
+		printk(KERN_ALERT "S2MM Probe: Could not allocate memory for remapping\n");
 		rc = -EIO;
 		goto error2;
 	}
@@ -160,7 +160,7 @@ static int s2mm_dma_probe(struct platform_device *pdev)
 	dma_init(vp->base_addr);
 	dma_simple_read(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
 
-	printk(KERN_NOTICE "s2mm_dma_probe: s2mm platform driver registered\n");
+	printk(KERN_NOTICE "S2MM Probe: Platform driver registered\n");
 	return 0; //ALL OK
 /*
 error3:
@@ -177,14 +177,14 @@ static int s2mm_dma_remove(struct platform_device *pdev)
 {
 	u32 reset = 0x00000004;
 	// writing to S2MM_DMACR register. Seting reset bit (3. bit)
-	printk(KERN_INFO "s2mm_dma_probe: resseting");
+	printk(KERN_INFO "S2MM Remove: Reset\n");
 	iowrite32(reset, vp->base_addr);
 
 	//free_irq(vp->irq_num, NULL);
 	iounmap(vp->base_addr);
 	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 	kfree(vp);
-	printk(KERN_INFO "s2mm_dma_probe: s2mm DMA removed");
+	printk(KERN_INFO "S2MM Removed\n");
 	return 0;
 }
 
@@ -231,18 +231,18 @@ static ssize_t s2mm_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
 
-	printk(KERN_INFO "DMA RX Buffer is being memory mapped\n");
+	printk(KERN_INFO "S2MM: RX Buffer is being memory mapped\n");
 
 	if (length > MAX_PKT_LEN)
 	{
 		return -EIO;
-		printk(KERN_ERR "Trying to mmap more space than it's allocated\n");
+		printk(KERN_ERR "S2MM: Trying to mmap more space than it's allocated\n");
 	}
 
 	ret = dma_mmap_coherent(NULL, vma_s, rx_vir_buffer, rx_phy_buffer, length);
 	if (ret < 0)
 	{
-		printk(KERN_ERR "memory map failed\n");
+		printk(KERN_ERR "S2MM: Memory map failed\n");
 		return ret;
 	}
 	return 0;
@@ -277,7 +277,7 @@ int dma_init(void __iomem *base_address)
 	//ERR_IRQ_EN = 1 << 14; // this is Err_IrqEn bit in S2MM_DMACR register
 
 	iowrite32(reset, base_address); // writing to S2MM_DMACR register. Seting reset bit (3. bit)
-
+	printk(KERN_INFO "S2MM Init: Reset\n");
 	//S2MM_DMACR_reg = ioread32(base_address);				 // Reading from S2MM_DMACR register inside DMA
 	//en_interrupt = S2MM_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in S2MM_DMACR
 	//iowrite32(en_interrupt, base_address);					 // writing to S2MM_DMACR register
@@ -297,6 +297,7 @@ u32 dma_simple_read(dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_
 
 	iowrite32(max_pkt_len, base_address + 40); // Write into S2MM_LENGTH register. This is the length of a tranaction.
 	// In our case this is the size of the image (640*480*4)
+	printk(KERN_INFO "S2MM Simple Read\n");
 	return 0;
 }
 
@@ -309,28 +310,28 @@ static int __init s2mm_dma_init(void)
 	int ret = 0;
 	int i = 0;
 
-	printk(KERN_INFO "s2mm_dma_init: Initialize Module \"%s\"\n", DEVICE_NAME);
+	printk(KERN_INFO "S2MM DMA Init: Initialize Module \"%s\"\n", DEVICE_NAME);
 	ret = alloc_chrdev_region(&my_dev_id, 0, 1, "s2mm_region");
 	if (ret)
 	{
-		printk(KERN_ALERT "s2mm_dma_init: Failed CHRDEV!\n");
+		printk(KERN_ALERT "S2MM DMA Init: Failed CHRDEV!\n");
 		return -1;
 	}
-	printk(KERN_INFO "s2mm_dma_init: Successful CHRDEV!\n");
+	printk(KERN_INFO "S2MM DMA Init: Successful CHRDEV!\n");
 	my_class = class_create(THIS_MODULE, "s2mm_drv");
 	if (my_class == NULL)
 	{
-		printk(KERN_ALERT "s2mm_dma_init: Failed class create!\n");
+		printk(KERN_ALERT "S2MM DMA Init: Failed class create!\n");
 		goto fail_0;
 	}
-	printk(KERN_INFO "s2mm_dma_init: Successful class chardev1 create!\n");
+	printk(KERN_INFO "S2MM DMA Init: Successful class chardev1 create!\n");
 	my_device = device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 0), NULL, "s2mm_dma");
 	if (my_device == NULL)
 	{
 		goto fail_1;
 	}
 
-	printk(KERN_INFO "s2mm_dma_init: Device created\n");
+	printk(KERN_INFO "S2MM DMA Init: Device created\n");
 
 	my_cdev = cdev_alloc();
 	my_cdev->ops = &my_fops;
@@ -338,22 +339,22 @@ static int __init s2mm_dma_init(void)
 	ret = cdev_add(my_cdev, my_dev_id, 1);
 	if (ret)
 	{
-		printk(KERN_ERR "s2mm_dma_init: Failed to add cdev\n");
+		printk(KERN_ERR "S2MM DMA Init: Failed to add cdev\n");
 		goto fail_2;
 	}
-	printk(KERN_INFO "s2mm_dma_init: Module init done\n");
+	printk(KERN_INFO "S2MM DMA Init: Module init done\n");
 
 	rx_vir_buffer = dma_alloc_coherent(NULL, MAX_PKT_LEN, &rx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!rx_vir_buffer)
 	{
-		printk(KERN_ALERT "s2mm_dma_init: Could not allocate dma_alloc_coherent for img");
+		printk(KERN_ALERT "S2MM DMA Init: Could not allocate dma_alloc_coherent for img");
 		goto fail_3;
 	}
 	else
-		printk("s2mm_dma_init: Successfully allocated memory for dma transaction buffer\n");
+		printk("S2MM DMA Init: Successfully allocated memory for dma transaction buffer\n");
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 		rx_vir_buffer[i] = 0x00000000;
-	printk(KERN_INFO "s2mm_dma_init: DMA memory reset.\n");
+	printk(KERN_INFO "S2MM DMA Init: Memory reset.\n");
 	return platform_driver_register(&s2mm_dma_driver);
 
 fail_3:
@@ -373,7 +374,7 @@ static void __exit s2mm_dma_exit(void)
 	int i = 0;
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 		rx_vir_buffer[i] = 0x00000000;
-	printk(KERN_INFO "s2mm_dma_exit: DMA memory reset\n");
+	printk(KERN_INFO "S2MM DMA Exit: Memory reset\n");
 
 	// Exit Device Module
 	platform_driver_unregister(&s2mm_dma_driver);
@@ -382,7 +383,7 @@ static void __exit s2mm_dma_exit(void)
 	class_destroy(my_class);
 	unregister_chrdev_region(my_dev_id, 1);
 	dma_free_coherent(NULL, MAX_PKT_LEN, rx_vir_buffer, rx_phy_buffer);
-	printk(KERN_INFO "s2mm_dma_exit: Exit device module finished\"%s\".\n", DEVICE_NAME);
+	printk(KERN_INFO "S2MM DMA Exit: Exit device module finished\"%s\".\n", DEVICE_NAME);
 }
 
 module_init(s2mm_dma_init);

@@ -28,7 +28,7 @@ MODULE_ALIAS("custom:mm2s_dma controller");
 #define DEVICE_NAME "mm2s_dma"
 #define DRIVER_NAME "mm2s_dma_driver"
 #define BUFF_SIZE 20
-#define MAX_PKT_LEN 1024 * 4
+#define MAX_PKT_LEN 1024
 
 //*******************FUNCTION PROTOTYPES************************************
 static int mm2s_dma_probe(struct platform_device *pdev);
@@ -234,7 +234,7 @@ static ssize_t mm2s_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
 
-	//printk(KERN_INFO "DMA TX Buffer is being memory mapped\n");
+	printk(KERN_INFO "DMA TX Buffer is being memory mapped\n");
 
 	if (length > MAX_PKT_LEN)
 	{

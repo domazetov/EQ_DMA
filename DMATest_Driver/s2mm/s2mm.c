@@ -73,7 +73,7 @@ static struct of_device_id s2mm_dma_of_match[] = {
 	{
 		.compatible = "xlnx,axi-dma-s2mm-channel",
 	},
-	{.compatible = "s2mm_dma"},
+	{.compatible = "axi_dma_s2mm"},
 	{/* end of list */},
 };
 MODULE_DEVICE_TABLE(of, s2mm_dma_of_match);

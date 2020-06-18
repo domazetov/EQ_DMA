@@ -13,7 +13,7 @@ int main(void)
 	printf("DMA test\n");
 	// If memory map is defined send image directly via mmap
 	int rx_proxy_fd, tx_proxy_fd;
-	int counter, i;
+	int counter, i, x = 0;
 	int *rx;
 	int *tx;
 
@@ -51,7 +51,8 @@ int main(void)
 	{
 		for (i = 0; i < 5; i++)
 		{
-			input[i] = counter + i;
+			input[x] = counter + i;
+			x++;
 		}
 	}
 
@@ -61,12 +62,13 @@ int main(void)
 
 	munmap(tx, TEST_SIZE);
 	munmap(rx, TEST_SIZE);
-
+	x = 0;
 	for (counter = 0; counter < 2; counter++)
 	{
 		for (i = 0; i < 5; i++)
 		{
-			printf("input: %d	output: %d", input[i], output[i]);
+			printf("input: %d	output: %d", input[x], output[x]);
+			x++;
 		}
 	}
 

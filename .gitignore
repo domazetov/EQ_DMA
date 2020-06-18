@@ -4,6 +4,8 @@ vezba12
 Vezba12_Instaliranje_Linux-a_na_Zybo_ploci_na_primeru_DMA_VGA.pdf
 BOOT
 BOOT_DMATest
+BOOT_DMATest2
+DMA-Proxy
 project_2
 DMA.png
 app
@@ -16,4 +18,3 @@ app
 *.symvers
 *.ko
 *.d
-DMA-Proxy

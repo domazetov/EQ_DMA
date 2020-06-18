@@ -5,7 +5,6 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-#include "test.h"
 #define TEST_SIZE 1024
 
 int main(void)
@@ -36,10 +35,10 @@ int main(void)
 	}
 
 	rx = (int *)mmap(NULL, TEST_SIZE,
-					 PROT_READ | PROT_WRITE, MAP_SHARED, tx_proxy_fd, 0);
+					 PROT_READ | PROT_WRITE, MAP_SHARED, rx_proxy_fd, 0);
 
 	tx = (int *)mmap(NULL, TEST_SIZE,
-					 PROT_READ | PROT_WRITE, MAP_SHARED, rx_proxy_fd, 0);
+					 PROT_READ | PROT_WRITE, MAP_SHARED, tx_proxy_fd, 0);
 
 	if ((rx == MAP_FAILED) || (tx == MAP_FAILED))
 	{
@@ -67,7 +66,7 @@ int main(void)
 	{
 		for (i = 0; i < 5; i++)
 		{
-			printf("input: %d	output: %d", input[x], output[x]);
+			printf("input: %d	output: %d\n", input[x], output[x]);
 			x++;
 		}
 	}

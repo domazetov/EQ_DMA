@@ -28,7 +28,7 @@ MODULE_ALIAS("custom:mm2s_dma controller");
 #define DEVICE_NAME "mm2s_dma"
 #define DRIVER_NAME "mm2s_dma_driver"
 #define BUFF_SIZE 20
-#define MAX_PKT_LEN 1024
+#define MAX_PKT_LEN 1024 * 4
 
 //*******************FUNCTION PROTOTYPES************************************
 static int mm2s_dma_probe(struct platform_device *pdev);

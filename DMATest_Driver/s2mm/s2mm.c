@@ -34,8 +34,8 @@ MODULE_ALIAS("custom:s2mm_dma controller");
 static int s2mm_dma_probe(struct platform_device *pdev);
 static int s2mm_dma_open(struct inode *i, struct file *f);
 static int s2mm_dma_close(struct inode *i, struct file *f);
-static ssize_t s2mm_dma_read(struct file *f, char __user *buf, size_t length, loff_t *off);
-static ssize_t s2mm_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
+//static ssize_t s2mm_dma_read(struct file *f, char __user *buf, size_t length, loff_t *off);
+//static ssize_t s2mm_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
 static ssize_t s2mm_dma_mmap(struct file *f, struct vm_area_struct *vma_s);
 static int __init s2mm_dma_init(void);
 static void __exit s2mm_dma_exit(void);
@@ -162,9 +162,10 @@ static int s2mm_dma_probe(struct platform_device *pdev)
 
 	printk(KERN_NOTICE "s2mm_dma_probe: s2mm platform driver registered\n");
 	return 0; //ALL OK
-
+/*
 error3:
 	iounmap(vp->base_addr);
+	*/
 error2:
 	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 	kfree(vp);

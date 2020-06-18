@@ -34,8 +34,8 @@ MODULE_ALIAS("custom:mm2s_dma controller");
 static int mm2s_dma_probe(struct platform_device *pdev);
 static int mm2s_dma_open(struct inode *i, struct file *f);
 static int mm2s_dma_close(struct inode *i, struct file *f);
-static ssize_t mm2s_dma_read(struct file *f, char __user *buf, size_t len, loff_t *off);
-static ssize_t mm2s_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
+//static ssize_t mm2s_dma_read(struct file *f, char __user *buf, size_t len, loff_t *off);
+//static ssize_t mm2s_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
 static ssize_t mm2s_dma_mmap(struct file *f, struct vm_area_struct *vma_s);
 static int __init mm2s_dma_init(void);
 static void __exit mm2s_dma_exit(void);
@@ -162,9 +162,10 @@ static int mm2s_dma_probe(struct platform_device *pdev)
 
 	printk(KERN_NOTICE "mm2s_dma_probe: mm2s platform driver registered\n");
 	return 0; //ALL OK
-
+/*
 error3:
 	iounmap(vp->base_addr);
+	*/
 error2:
 	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 	kfree(vp);

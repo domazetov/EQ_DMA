@@ -18,3 +18,4 @@ app
 *.symvers
 *.ko
 *.d
+output.txt

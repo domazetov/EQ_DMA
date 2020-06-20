@@ -15,6 +15,7 @@
 #include <linux/platform_device.h> //platform driver
 #include <linux/of.h>			   //of_match_table
 #include <linux/ioport.h>		   //ioremap
+#include <linux/miscdevice.h>
 
 #include <linux/dma-mapping.h> //dma access
 #include <linux/mm.h>		   //dma access
@@ -56,17 +57,10 @@ struct test_dma_info
 	int irq_num;
 };
 
-static struct cdev *tx_cdev;
-static dev_t tx_dev_id;
-//static struct class *tx_class;
-static struct device *tx_device;
-
+static struct cdev *dma_cdev;
+static dev_t dma_dev_id;
 static struct class *dma_class;
-
-static struct cdev *rx_cdev;
-static dev_t rx_dev_id;
-//static struct class *rx_class;
-static struct device *rx_device;
+static struct device *dma_device;
 
 static struct test_dma_info *vp = NULL;
 
@@ -77,7 +71,7 @@ static struct file_operations rx_fops =
 		.release = test_dma_close,
 		.read = test_dma_read,
 		.write = test_dma_write,
-		.mmap = rx_dma_mmap};
+		.mmap = rx_mmap};
 
 static struct file_operations tx_fops =
 	{
@@ -86,7 +80,17 @@ static struct file_operations tx_fops =
 		.release = test_dma_close,
 		.read = test_dma_read,
 		.write = test_dma_write,
-		.mmap = tx_dma_mmap};
+		.mmap = tx_mmap};
+
+static struct miscdevice dma_rx = {
+	.minor = MISC_DYNAMIC_MINOR,
+	.name = "/dev/dma_rx",
+	.fops = &rx_fops};
+
+static struct miscdevice dma_tx = {
+	.minor = MISC_DYNAMIC_MINOR,
+	.name = "/dev/dma_tx",
+	.fops = &tx_fops};
 
 static struct of_device_id test_dma_of_match[] = {
 	{
@@ -96,7 +100,7 @@ static struct of_device_id test_dma_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, test_dma_of_match);
 
-static struct platform_driver test_dma_driver = {
+static struct platform_driver dma_driver = {
 	.driver = {
 		.name = DRIVER_NAME,
 		.owner = THIS_MODULE,
@@ -231,7 +235,7 @@ static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t len
 	return 0;
 }
 
-static ssize_t rx_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
+static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s)
 {
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
@@ -253,7 +257,7 @@ static ssize_t rx_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 	return 0;
 }
 
-static ssize_t tx_dma_mmap(struct file *f, struct vm_area_struct *vma_s)
+static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s)
 {
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
@@ -348,177 +352,124 @@ u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt
 //***************************************************
 // INIT AND EXIT FUNCTIONS OF THE DRIVER
 
-static int rx_init(void)
+static int __init mm2s_dma_init(void)
 {
+
 	int ret = 0;
 	int i = 0;
 
-	printk(KERN_INFO "RX DMA Init: Initialize Module \"%s\"\n", DEVICE_NAME);
-	ret = alloc_chrdev_region(&rx_dev_id, 0, 1, "dma_driver");
+	ret = misc_register(&dma_rx);
+	if (ret != 0)
+	{
+		pr_err("misc_register() failed");
+		return ret;
+	}
+
+	pr_info("device registered: %s\n", "/dev/dma_rx");
+
+	ret = misc_register(&dma_tx);
+	if (ret != 0)
+	{
+		pr_err("misc_register() failed");
+		return ret;
+	}
+
+	pr_info("device registered: %s\n", "/dev/dma_tx");
+	/*
+	printk(KERN_INFO "DMA INIT: Initialize Module \"%s\"\n", DEVICE_NAME);
+	ret = alloc_chrdev_region(&dma_dev_id, 0, 2, "dma_region");
 	if (ret)
 	{
-		printk(KERN_ALERT "RX DMA Init: Failed CHRDEV!\n");
+		printk(KERN_ALERT "DMA INIT: Failed CHRDEV!\n");
 		return -1;
 	}
-	printk(KERN_INFO "RX DMA Init: Successful CHRDEV!\n");
-
-	rx_device = device_create(dma_class, NULL, MKDEV(MAJOR(rx_dev_id), 0), NULL, "rx_dma");
-	if (rx_device == NULL)
+	printk(KERN_INFO "DMA INIT: Successful CHRDEV!\n");
+	dma_class = class_create(THIS_MODULE, "dma_drv");
+	if (dma_class == NULL)
+	{
+		printk(KERN_ALERT "DMA INIT: Failed class create!\n");
+		goto fail_0;
+	}
+	printk(KERN_INFO "DMA INIT: Successful class chardevs create!\n");
+	dma_device = device_create(dma_class, NULL, MKDEV(MAJOR(dma_dev_id), 0), NULL, "dma_rx");
+	if (dma_device == NULL)
 	{
 		goto fail_1;
 	}
 
-	printk(KERN_INFO "RX DMA Init: Device created\n");
+	printk(KERN_INFO "DMA INIT: Device created\n");
 
-	rx_cdev = cdev_alloc();
-	rx_cdev->ops = &rx_fops;
-	rx_cdev->owner = THIS_MODULE;
-	ret = cdev_add(rx_cdev, rx_dev_id, 1);
-
+	dma_cdev = cdev_alloc();
+	dma_cdev->ops = &rx_fops;
+	dma_cdev->owner = THIS_MODULE;
+	ret = cdev_add(dma_cdev, dma_dev_id, 2);
 	if (ret)
 	{
-		printk(KERN_ERR "RX DMA Init: Failed to add cdev\n");
+		printk(KERN_ERR "DMA INIT: Failed to add cdev\n");
 		goto fail_2;
 	}
-	printk(KERN_INFO "RX DMA Init: Module init done\n");
+*/
+
+	printk(KERN_INFO "DMA INIT: Module init done\n");
 
 	rx_vir_buffer = dma_alloc_coherent(NULL, MAX_PKT_LEN, &rx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!rx_vir_buffer)
 	{
-		printk(KERN_ALERT "RX DMA Init: Could not allocate dma_alloc_coherent");
-		goto fail_3;
+		printk(KERN_ALERT "DMA INIT: Could not allocate dma_alloc_coherent for RX");
+		//goto fail_3;
 	}
 	else
-		printk("RX DMA Init: Successfully allocated memory for dma transaction buffer\n");
+		printk("DMA INIT: Successfully allocated memory for dma RX buffer\n");
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 		rx_vir_buffer[i] = 0x00000000;
-	printk(KERN_INFO "RX DMA Init: DMA memory reset.\n");
-
-fail_3:
-	cdev_del(rx_cdev);
-fail_2:
-	device_destroy(dma_class, MKDEV(MAJOR(rx_dev_id), 0));
-fail_1:
-	class_destroy(dma_class);
-	return -1;
-}
-
-static int tx_init(void)
-{
-	int ret = 0;
-	int i = 0;
-
-	printk(KERN_INFO "TX DMA Init: Initialize Module \"%s\"\n", DEVICE_NAME);
-	ret = alloc_chrdev_region(&tx_dev_id, 0, 1, "dma_driver");
-	if (ret)
-	{
-		printk(KERN_ALERT "TX DMA Init: Failed CHRDEV!\n");
-		return -1;
-	}
-	printk(KERN_INFO "TX DMA Init: Successful CHRDEV!\n");
-
-	tx_device = device_create(dma_class, NULL, MKDEV(MAJOR(tx_dev_id), 0), NULL, "tx_dma");
-	if (tx_device == NULL)
-	{
-		goto fail_1;
-	}
-
-	printk(KERN_INFO "TX DMA Init: Device created\n");
-
-	tx_cdev = cdev_alloc();
-	tx_cdev->ops = &tx_fops;
-	tx_cdev->owner = THIS_MODULE;
-	ret = cdev_add(tx_cdev, tx_dev_id, 1);
-
-	if (ret)
-	{
-		printk(KERN_ERR "TX DMA Init: Failed to add cdev\n");
-		goto fail_2;
-	}
-	printk(KERN_INFO "TX DMA Init: Module init done\n");
 
 	tx_vir_buffer = dma_alloc_coherent(NULL, MAX_PKT_LEN, &tx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!tx_vir_buffer)
 	{
-		printk(KERN_ALERT "TX DMA Init: Could not allocate dma_alloc_coherent");
-		goto fail_3;
+		printk(KERN_ALERT "DMA INIT: Could not allocate dma_alloc_coherent for TX");
+		//goto fail_3;
 	}
 	else
-		printk("TX DMA Init: Successfully allocated memory for dma transaction buffer\n");
+		printk("DMA INIT: Successfully allocated memory for dma TX buffer\n");
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 		tx_vir_buffer[i] = 0x00000000;
-	printk(KERN_INFO "TX DMA Init: DMA memory reset.\n");
 
+	printk(KERN_INFO "DMA INIT: DMA memory reset.\n");
+	return platform_driver_register(&dma_driver);
+	/*
 fail_3:
-	cdev_del(tx_cdev);
+	cdev_del(my_cdev);
 fail_2:
-	device_destroy(dma_class, MKDEV(MAJOR(tx_dev_id), 0));
+	device_destroy(my_class, MKDEV(MAJOR(my_dev_id), 0));
 fail_1:
-	class_destroy(dma_class);
-	return -1;
-}
-
-static int __init test_dma_init(void)
-{
-	static struct class *dma_class_local = NULL;
-
-	dma_class_local = class_create(THIS_MODULE, DRIVER_NAME);
-	if (dma_class_local == NULL)
-	{
-		printk(KERN_ALERT "DMA Init: Failed class create!\n");
-		goto fail_0;
-	}
-	dma_class = dma_class_local;
-	printk(KERN_INFO "DMA INIT: Successful class chardevs create!\n");
-
-	rx_init();
-	tx_init();
-	return platform_driver_register(&test_dma_driver);
-
+	class_destroy(my_class);
 fail_0:
-	unregister_chrdev_region(tx_dev_id, 1);
-	return -1;
+	unregister_chrdev_region(my_dev_id, 1);
+	return -1;*/
+
+	return ret;
 }
 
-static void rx_dma_exit(void)
-{
-	//Reset DMA memory
-	int i = 0;
-	for (i = 0; i < MAX_PKT_LEN / 4; i++)
-		rx_vir_buffer[i] = 0x00000000;
-	printk(KERN_INFO "RX DMA EXIT: DMA memory reset\n");
-
-	// Exit Device Module
-	platform_driver_unregister(&test_dma_driver);
-	cdev_del(rx_cdev);
-	device_destroy(dma_class, MKDEV(MAJOR(rx_dev_id), 0));
-	unregister_chrdev_region(rx_dev_id, 1);
-	dma_free_coherent(NULL, MAX_PKT_LEN, rx_vir_buffer, rx_phy_buffer);
-	printk(KERN_INFO "RX DMA EXIT: Exit device module finished\"%s\".\n", DEVICE_NAME);
-}
-
-static void tx_dma_exit(void)
+static void __exit mm2s_dma_exit(void)
 {
 	//Reset DMA memory
 	int i = 0;
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 		tx_vir_buffer[i] = 0x00000000;
-	printk(KERN_INFO "TX DMA EXIT: DMA memory reset\n");
+	printk(KERN_INFO "DMA EXIT: DMA memory reset\n");
 
 	// Exit Device Module
-	platform_driver_unregister(&test_dma_driver);
-	cdev_del(tx_cdev);
-	device_destroy(dma_class, MKDEV(MAJOR(tx_dev_id), 0));
-	unregister_chrdev_region(tx_dev_id, 1);
-	dma_free_coherent(NULL, MAX_PKT_LEN, tx_vir_buffer, tx_phy_buffer);
-	printk(KERN_INFO "TX DMA EXIT: Exit device module finished\"%s\".\n", DEVICE_NAME);
-}
+	platform_driver_unregister(&dma_driver);
+	cdev_del(my_cdev);
+	//device_destroy(my_class, MKDEV(MAJOR(my_dev_id), 0));
+	//class_destroy(my_class);
+	//unregister_chrdev_region(my_dev_id, 1);
+	misc_deregister(&dma_rx);
+	misc_deregister(&dma_tx);
+	pr_info("device unregistered\n");
 
-static void __exit test_dma_exit(void)
-{
-	rx_dma_exit();
-	tx_dma_exit();
-	class_destroy(dma_class);
+	dma_free_coherent(NULL, MAX_PKT_LEN, tx_vir_buffer, tx_phy_buffer);
+	printk(KERN_INFO "DMA EXIT: Exit device module finished\"%s\".\n", DEVICE_NAME);
 }
 
 module_init(test_dma_init);

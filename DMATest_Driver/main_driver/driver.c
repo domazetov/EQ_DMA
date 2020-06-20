@@ -45,7 +45,7 @@ static int test_dma_remove(struct platform_device *pdev);
 
 static irqreturn_t dma_isr(int irq, void *dev_id);
 int dma_init(void __iomem *base_address);
-u32 dma_simple_write(dma_addr_t TxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
+u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
 
 //*********************GLOBAL VARIABLES*************************************
 struct test_dma_info
@@ -174,7 +174,7 @@ static int test_dma_probe(struct platform_device *pdev)
 
 	/* INIT DMA */
 	dma_init(vp->base_addr);
-	dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
+	dma_simple_write(tx_phy_buffer, rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
 
 	printk(KERN_NOTICE "test_dma_probe: test platform driver registered\n");
 	return 0; //ALL OK
@@ -288,7 +288,7 @@ static irqreturn_t dma_isr(int irq, void *dev_id)
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
 
 	/*Send a transaction*/
-	dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
+	dma_simple_write(tx_phy_buffer, rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
 
 	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\n");
 	return IRQ_HANDLED;
@@ -321,7 +321,7 @@ int dma_init(void __iomem *base_address)
 	return 0;
 }
 
-u32 dma_simple_write(dma_addr_t TxBufferPtr, u32 max_pkt_len, void __iomem *base_address)
+u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address)
 {
 	u32 MM2S_DMACR_reg;
 	u32 S2MM_DMACR_reg;

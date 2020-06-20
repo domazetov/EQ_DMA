@@ -39,7 +39,7 @@ static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t len
 //static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s);
 //static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s);
 static ssize_t dma_mmap(struct inode *i, struct file *f, struct vm_area_struct *vma_s);
-void mmapx(struct vm_area_struct *vma_s, dma_addr_t *phy_buffer, u32 *vir_buffer);
+int mmapx(struct vm_area_struct *vma_s, dma_addr_t phy_buffer, u32 *vir_buffer);
 static int __init test_dma_init(void);
 static void __exit test_dma_exit(void);
 static int test_dma_remove(struct platform_device *pdev);
@@ -262,7 +262,7 @@ static ssize_t dma_mmap(struct inode *i, struct file *f, struct vm_area_struct *
 	return 0;
 }
 
-void mmapx(struct vm_area_struct *vma_s, dma_addr_t *phy_buffer, u32 *vir_buffer)
+int mmapx(struct vm_area_struct *vma_s, dma_addr_t phy_buffer, u32 *vir_buffer)
 {
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
@@ -280,7 +280,7 @@ void mmapx(struct vm_area_struct *vma_s, dma_addr_t *phy_buffer, u32 *vir_buffer
 		printk(KERN_ERR "MMAP failed\n");
 		return ret;
 	}
-	printk(KERN_INFO "MMAP DONE, length: %d\n", length);
+	printk(KERN_INFO "MMAP DONE, length: %ld\n", length);
 }
 
 /*
@@ -446,7 +446,7 @@ static int __init test_dma_init(void)
 	printk(KERN_INFO "DMA INIT: Successful class chardevs create!\n");
 
 	dma_cdev = cdev_alloc();
-	dma_cdev->ops = &rx_fops;
+	dma_cdev->ops = &dma_fops;
 	dma_cdev->owner = THIS_MODULE;
 	ret = cdev_add(dma_cdev, dma_dev_id, 2);
 	if (ret)

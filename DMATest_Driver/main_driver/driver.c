@@ -36,9 +36,10 @@ static int test_dma_open(struct inode *i, struct file *f);
 static int test_dma_close(struct inode *i, struct file *f);
 static ssize_t test_dma_read(struct file *f, char __user *buf, size_t len, loff_t *off);
 static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
-static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s);
-static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s);
+//static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s);
+//static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s);
 static ssize_t dma_mmap(struct inode *i, struct file *f, struct vm_area_struct *vma_s);
+void mmapx(struct vm_area_struct *vma_s, dma_addr_t *phy_buffer, u32 *vir_buffer);
 static int __init test_dma_init(void);
 static void __exit test_dma_exit(void);
 static int test_dma_remove(struct platform_device *pdev);
@@ -250,10 +251,10 @@ static ssize_t dma_mmap(struct inode *i, struct file *f, struct vm_area_struct *
 	switch (minor)
 	{
 	case 0:
-		mmap(vma_s, rx_phy_buffer, rx_vir_buffer);
+		mmapx(vma_s, rx_phy_buffer, rx_vir_buffer);
 		break;
 	case 1:
-		mmap(vma_s, tx_phy_buffer, tx_vir_buffer);
+		mmapx(vma_s, tx_phy_buffer, tx_vir_buffer);
 		break;
 	default:
 		printk(KERN_ERR "Invalid device minor: %d\n", minor);
@@ -261,7 +262,7 @@ static ssize_t dma_mmap(struct inode *i, struct file *f, struct vm_area_struct *
 	return 0;
 }
 
-void mmap(struct vm_area_struct *vma_s, dma_addr_t phy_buffer, u32 vir_buffer)
+void mmapx(struct vm_area_struct *vma_s, dma_addr_t *phy_buffer, u32 *vir_buffer)
 {
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
@@ -473,7 +474,7 @@ static int __init test_dma_init(void)
 	if (!rx_vir_buffer)
 	{
 		printk(KERN_ALERT "DMA INIT: Could not allocate dma_alloc_coherent for RX");
-		//goto fail_3;
+		goto fail_3;
 	}
 	else
 		printk("DMA INIT: Successfully allocated memory for dma RX buffer\n");
@@ -484,7 +485,7 @@ static int __init test_dma_init(void)
 	if (!tx_vir_buffer)
 	{
 		printk(KERN_ALERT "DMA INIT: Could not allocate dma_alloc_coherent for TX");
-		//goto fail_3;
+		goto fail_3;
 	}
 	else
 		printk("DMA INIT: Successfully allocated memory for dma TX buffer\n");

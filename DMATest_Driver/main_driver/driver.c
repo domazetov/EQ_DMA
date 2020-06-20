@@ -38,8 +38,7 @@ static ssize_t test_dma_read(struct file *f, char __user *buf, size_t len, loff_
 static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
 //static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s);
 //static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s);
-static ssize_t dma_mmap(struct inode *i, struct file *f, struct vm_area_struct *vma_s);
-int mmapx(struct vm_area_struct *vma_s, dma_addr_t phy_buffer, u32 *vir_buffer);
+static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s);
 static int __init test_dma_init(void);
 static void __exit test_dma_exit(void);
 static int test_dma_remove(struct platform_device *pdev);
@@ -121,8 +120,8 @@ static struct platform_driver dma_driver = {
 dma_addr_t tx_phy_buffer;
 u32 *tx_vir_buffer;
 
-dma_addr_t rx_phy_buffer;
-u32 *rx_vir_buffer;
+//dma_addr_t rx_phy_buffer;
+//u32 *rx_vir_buffer;
 //***************************************************************************
 // PROBE AND REMOVE
 static int test_dma_probe(struct platform_device *pdev)
@@ -243,30 +242,12 @@ static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t len
 	return 0;
 }
 
-static ssize_t dma_mmap(struct inode *i, struct file *f, struct vm_area_struct *vma_s)
-{
-	int minor = MINOR(i->i_rdev);
-	printk(KERN_INFO "MMAP minor = %d", minor);
-
-	switch (minor)
-	{
-	case 0:
-		mmapx(vma_s, rx_phy_buffer, rx_vir_buffer);
-		break;
-	case 1:
-		mmapx(vma_s, tx_phy_buffer, tx_vir_buffer);
-		break;
-	default:
-		printk(KERN_ERR "Invalid device minor: %d\n", minor);
-	}
-	return 0;
-}
-
-int mmapx(struct vm_area_struct *vma_s, dma_addr_t phy_buffer, u32 *vir_buffer)
+static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 {
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
-	printk(KERN_INFO "DMA Buffer is being memory mapped\n");
+
+	printk(KERN_INFO "DMA TX Buffer is being memory mapped\n");
 
 	if (length > MAX_PKT_LEN)
 	{
@@ -274,13 +255,13 @@ int mmapx(struct vm_area_struct *vma_s, dma_addr_t phy_buffer, u32 *vir_buffer)
 		printk(KERN_ERR "Trying to mmap more space than it's allocated\n");
 	}
 
-	ret = dma_mmap_coherent(NULL, vma_s, vir_buffer, phy_buffer, length);
+	ret = dma_mmap_coherent(NULL, vma_s, tx_vir_buffer, tx_phy_buffer, length);
 	if (ret < 0)
 	{
-		printk(KERN_ERR "MMAP failed\n");
+		printk(KERN_ERR "memory map failed\n");
 		return ret;
 	}
-	printk(KERN_INFO "MMAP DONE, length: %ld\n", length);
+	return 0;
 }
 
 /*
@@ -390,7 +371,7 @@ u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt
 	iowrite32(0x1 | S2MM_DMACR_reg, base_address + 48); // set RS bit in S2MM_DMACR register (this bit starts the DMA)
 	iowrite32(0x1 | MM2S_DMACR_reg, base_address);		// set RS bit in MM2S_DMACR register (this bit starts the DMA)
 
-	iowrite32((u32)RxBufferPtr, base_address + 24 + 48); // Write into S2MM_SA register the value of RxBufferPtr.
+	iowrite32((u32)TxBufferPtr, base_address + 24 + 48); // Write into S2MM_SA register the value of RxBufferPtr.
 	iowrite32((u32)TxBufferPtr, base_address + 24);		 // Write into MM2S_SA register the value of TxBufferPtr.
 	// With this, the DMA knows from where to start.
 
@@ -469,7 +450,7 @@ static int __init test_dma_init(void)
 	printk(KERN_INFO "DMA INIT: Device created\n");
 
 	//printk(KERN_INFO "DMA INIT: Module init done\n");
-
+	/*
 	rx_vir_buffer = dma_alloc_coherent(NULL, MAX_PKT_LEN, &rx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!rx_vir_buffer)
 	{
@@ -480,7 +461,7 @@ static int __init test_dma_init(void)
 		printk("DMA INIT: Successfully allocated memory for dma RX buffer\n");
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 		rx_vir_buffer[i] = 0x00000000;
-
+*/
 	tx_vir_buffer = dma_alloc_coherent(NULL, MAX_PKT_LEN, &tx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!tx_vir_buffer)
 	{
@@ -515,7 +496,7 @@ static void __exit test_dma_exit(void)
 	int i = 0;
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 	{
-		rx_vir_buffer[i] = 0x00000000;
+		//rx_vir_buffer[i] = 0x00000000;
 		tx_vir_buffer[i] = 0x00000000;
 	}
 	printk(KERN_INFO "DMA EXIT: DMA memory reset\n");

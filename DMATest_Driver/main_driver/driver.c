@@ -359,7 +359,7 @@ static int rx_init(void)
 		return -1;
 	}
 	printk(KERN_INFO "RX DMA Init: Successful CHRDEV!\n");
-	rx_class = class_create(THIS_MODULE, DRIVER_NAME);
+	rx_class = class_create(THIS_MODULE, "rx_driver");
 	if (rx_class == NULL)
 	{
 		printk(KERN_ALERT "RX DMA Init: Failed class create!\n");
@@ -397,7 +397,6 @@ static int rx_init(void)
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 		rx_vir_buffer[i] = 0x00000000;
 	printk(KERN_INFO "RX DMA Init: DMA memory reset.\n");
-	return platform_driver_register(&test_dma_driver);
 
 fail_3:
 	cdev_del(rx_cdev);
@@ -423,7 +422,7 @@ static int tx_init(void)
 		return -1;
 	}
 	printk(KERN_INFO "TX DMA Init: Successful CHRDEV!\n");
-	tx_class = class_create(THIS_MODULE, DRIVER_NAME);
+	tx_class = class_create(THIS_MODULE, "tx_driver");
 	if (tx_class == NULL)
 	{
 		printk(KERN_ALERT "TX DMA Init: Failed class create!\n");
@@ -461,7 +460,6 @@ static int tx_init(void)
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 		tx_vir_buffer[i] = 0x00000000;
 	printk(KERN_INFO "TX DMA Init: DMA memory reset.\n");
-	return platform_driver_register(&test_dma_driver);
 
 fail_3:
 	cdev_del(tx_cdev);
@@ -478,6 +476,7 @@ static int __init test_dma_init(void)
 {
 	rx_init();
 	tx_init();
+	return platform_driver_register(&test_dma_driver);
 }
 
 static void rx_dma_exit(void)

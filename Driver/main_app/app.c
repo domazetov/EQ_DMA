@@ -17,22 +17,20 @@
 int main(void)
 {
 	FILE *fp;
-	int fd;
-	int fr;
-	int *p;
-	int *r;
+	int rx_proxy_fd, tx_proxy_fd;
+	int *rx;
+	int *tx;
 	int i;
-	int j;
-	unsigned int *hardware_res;
-	unsigned int rezultat;
-	// kada testiramo sve pakete for(i = 0; i < NUMBER_OF_PACKAGES; i++)
 
+	unsigned int *hardware_res;
+	// kada testiramo sve pakete for(i = 0; i < NUMBER_OF_PACKAGES; i++)
+	printf("Equalizer started!\n");
 	for (i = 0; i < (NUMBER_OF_AMPLIFICATIONS + NUMBER_OF_BOUNDARIES); i++)
 	{
-		fp = fopen("/dev/eq", "w");
+		fp = fopen("/dev/equalizer", "w");
 		if (fp == NULL)
 		{
-			printf("Cannot open /dev/eq for write\n");
+			printf("Cannot open /dev/equalizer for write\n");
 			return -1;
 		}
 		if (i < NUMBER_OF_AMPLIFICATIONS)
@@ -42,43 +40,57 @@ int main(void)
 		fclose(fp);
 		if (fp == NULL)
 		{
-			printf("Cannot close /dev/eq\n");
+			printf("Cannot close /dev/equalizer\n");
 			return -1;
 		}
 	}
 
-	fd = open("/dev/dm", O_RDWR | O_NDELAY);
-	if (fd < 0)
+	tx_proxy_fd = open("/dev/dma_tx", O_RDWR);
+
+	if (tx_proxy_fd < 1)
 	{
-		printf("Cannot open /dev/dm for write\n");
-		return -1;
-	}
-	p = (int *)mmap(0, MAX_PKT_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-	memcpy(p, audio, MAX_PKT_SIZE);
-	munmap(p, MAX_PKT_SIZE);
-	close(fd);
-	if (fd < 0)
-	{
-		printf("Cannot close /dev/dm for write\n");
-		return -1;
+		printf("Unable to open DMA MM2S");
+		exit(EXIT_FAILURE);
 	}
 
-	fr = open("/dev/dm_s2mm", O_RDWR | O_NDELAY);
-	if (fr < 0)
+	rx_proxy_fd = open("/dev/dma_rx", O_RDWR);
+	if (rx_proxy_fd < 1)
 	{
-		printf("Cannot open /dev/dm_s2mm for write\n");
-		return -1;
+		printf("Unable to open DMA S2MM");
+		exit(EXIT_FAILURE);
 	}
+
+	fp = fopen("output.txt", "w+");
+
 	hardware_res = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
-	r = (int *)mmap(0, MAX_PKT_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fr, 0);
-	memcpy(hardware_res, r, MAX_PKT_SIZE);
-	munmap(r, MAX_PKT_SIZE);
-	close(fr);
-	if (fr < 0)
+
+	rx = (int *)mmap(NULL, MAX_PKT_SIZE,
+					 PROT_READ | PROT_WRITE, MAP_SHARED, rx_proxy_fd, 0);
+
+	tx = (int *)mmap(NULL, MAX_PKT_SIZE,
+					 PROT_READ | PROT_WRITE, MAP_SHARED, tx_proxy_fd, 0);
+
+	if ((rx == MAP_FAILED) || (tx == MAP_FAILED))
 	{
-		printf("Cannot close /dev/dm_s2mm for write\n");
-		return -1;
+		printf("Failed to mmap\n");
+		exit(EXIT_FAILURE);
 	}
-	printf("\n\n***************%d*************\n\n", sizeof(hardware_res));
+
+	memcpy(tx, audio, TEST_SIZE);
+	memcpy(hardware_res, rx, TEST_SIZE);
+
+	munmap(tx, TEST_SIZE);
+	munmap(rx, TEST_SIZE);
+
+	close(tx_proxy_fd);
+	close(rx_proxy_fd);
+
+	for (i = 0; i < TEST_SIZE; i++)
+	{
+		fprintf(fp, "%d\n", hardware_res[i]);
+	}
+	fclose(fp);
+
+	printf("Equalizer completed!\n");
 	return 0;
 }

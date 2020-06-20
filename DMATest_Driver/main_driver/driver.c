@@ -120,8 +120,8 @@ static struct platform_driver dma_driver = {
 dma_addr_t tx_phy_buffer;
 u32 *tx_vir_buffer;
 
-//dma_addr_t rx_phy_buffer;
-//u32 *rx_vir_buffer;
+dma_addr_t rx_phy_buffer;
+u32 *rx_vir_buffer;
 //***************************************************************************
 // PROBE AND REMOVE
 static int test_dma_probe(struct platform_device *pdev)

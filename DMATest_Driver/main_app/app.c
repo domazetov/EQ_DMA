@@ -19,7 +19,7 @@ int main(void)
 	int input[TEST_SIZE];
 	int output[TEST_SIZE];
 
-	tx_proxy_fd = open("/dev/mm2s_dma", O_RDWR);
+	tx_proxy_fd = open("/dev/dma_tx", O_RDWR);
 
 	if (tx_proxy_fd < 1)
 	{
@@ -27,7 +27,7 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	rx_proxy_fd = open("/dev/s2mm_dma", O_RDWR);
+	rx_proxy_fd = open("/dev/dma_rx", O_RDWR);
 	if (rx_proxy_fd < 1)
 	{
 		printf("Unable to open DMA S2MM");

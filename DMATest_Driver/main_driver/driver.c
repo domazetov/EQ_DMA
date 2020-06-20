@@ -39,8 +39,6 @@ static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t len
 static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s);
 static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s);
 static int __init test_dma_init(void);
-static int rx_init(void);
-static int tx_init(void);
 static void __exit test_dma_exit(void);
 static int test_dma_remove(struct platform_device *pdev);
 
@@ -84,12 +82,12 @@ static struct file_operations tx_fops =
 
 static struct miscdevice dma_rx = {
 	.minor = MISC_DYNAMIC_MINOR,
-	.name = "/dev/dma_rx",
+	.name = "dma_rx",
 	.fops = &rx_fops};
 
 static struct miscdevice dma_tx = {
 	.minor = MISC_DYNAMIC_MINOR,
-	.name = "/dev/dma_tx",
+	.name = "dma_tx",
 	.fops = &tx_fops};
 
 static struct of_device_id test_dma_of_match[] = {
@@ -122,19 +120,19 @@ static int test_dma_probe(struct platform_device *pdev)
 	struct resource *r_mem;
 	int rc = 0;
 
-	printk(KERN_INFO "test_dma_probe: Probing\n");
+	printk(KERN_INFO "DMA PROBE: Probing\n");
 	// Get phisical register adress space from device tree
 	r_mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!r_mem)
 	{
-		printk(KERN_ALERT "test_dma_probe: Failed to get reg resource\n");
+		printk(KERN_ALERT "DMA PROBE: Failed to get reg resource\n");
 		return -ENODEV;
 	}
 	// Get memory for structure test_dma_info
 	vp = (struct test_dma_info *)kmalloc(sizeof(struct test_dma_info), GFP_KERNEL);
 	if (!vp)
 	{
-		printk(KERN_ALERT "test_dma_probe: Could not allocate memory for structure test_dma_info\n");
+		printk(KERN_ALERT "DMA PROBE: Could not allocate memory for structure test_dma_info\n");
 		return -ENOMEM;
 	}
 	// Put phisical adresses in timer_info structure
@@ -144,7 +142,7 @@ static int test_dma_probe(struct platform_device *pdev)
 	// Reserve that memory space for this driver
 	if (!request_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1, DRIVER_NAME))
 	{
-		printk(KERN_ALERT "test_dma_probe: Could not lock memory region at %p\n", (void *)vp->mem_start);
+		printk(KERN_ALERT "DMA PROBE: Could not lock memory region at %p\n", (void *)vp->mem_start);
 		rc = -EBUSY;
 		goto error1;
 	}
@@ -153,7 +151,7 @@ static int test_dma_probe(struct platform_device *pdev)
 	vp->base_addr = ioremap(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 	if (!vp->base_addr)
 	{
-		printk(KERN_ALERT "test_dma_probe: Could not allocate memory for remapping\n");
+		printk(KERN_ALERT "DMA PROBE: Could not allocate memory for remapping\n");
 		rc = -EIO;
 		goto error2;
 	}
@@ -162,27 +160,27 @@ static int test_dma_probe(struct platform_device *pdev)
 	vp->irq_num = platform_get_irq(pdev, 0);
 	if (!vp->irq_num)
 	{
-		printk(KERN_ERR "test_dma_probe: Could not get IRQ resource\n");
+		printk(KERN_ERR "DMA PROBE: Could not get IRQ resource\n");
 		rc = -ENODEV;
 		goto error2;
 	}
 
 	if (request_irq(vp->irq_num, dma_isr, 0, DEVICE_NAME, NULL))
 	{
-		printk(KERN_ERR "test_dma_probe: Could not register IRQ %d\n", vp->irq_num);
+		printk(KERN_ERR "DMA PROBE: Could not register IRQ %d\n", vp->irq_num);
 		return -EIO;
 		goto error3;
 	}
 	else
 	{
-		printk(KERN_INFO "test_dma_probe: Registered IRQ %d\n", vp->irq_num);
+		printk(KERN_INFO "DMA PROBE: Registered IRQ %d\n", vp->irq_num);
 	}
 
 	/* INIT DMA */
 	dma_init(vp->base_addr);
 	dma_simple_write(tx_phy_buffer, rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
 
-	printk(KERN_NOTICE "test_dma_probe: test platform driver registered\n");
+	printk(KERN_NOTICE "DMA PROBE: Test platform driver registered\n");
 	return 0; //ALL OK
 
 error3:
@@ -198,14 +196,14 @@ static int test_dma_remove(struct platform_device *pdev)
 {
 	u32 reset = 0x00000004;
 	// writing to MM2S_DMACR register. Seting reset bit (3. bit)
-	printk(KERN_INFO "test_dma_probe: resseting");
+	printk(KERN_INFO "DMA PROBE: Resseting");
 	iowrite32(reset, vp->base_addr);
 
 	free_irq(vp->irq_num, NULL);
 	iounmap(vp->base_addr);
 	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 	kfree(vp);
-	printk(KERN_INFO "test_dma_probe: test DMA removed");
+	printk(KERN_INFO "DMA PROBE: DMA removed");
 	return 0;
 }
 
@@ -213,25 +211,25 @@ static int test_dma_remove(struct platform_device *pdev)
 // IMPLEMENTATION OF FILE OPERATION FUNCTIONS
 static int test_dma_open(struct inode *i, struct file *f)
 {
-	//printk(KERN_INFO "test_dma opened\n");
+	printk(KERN_INFO "DMA opened\n");
 	return 0;
 }
 
 static int test_dma_close(struct inode *i, struct file *f)
 {
-	//printk(KERN_INFO "test_dma closed\n");
+	printk(KERN_INFO "DMA closed\n");
 	return 0;
 }
 
 static ssize_t test_dma_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
-	//printk("test_dma read\n");
+	printk("DMA read\n");
 	return 0;
 }
 
 static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off)
 {
-	//printk("test_dma write\n");
+	printk("DMA write\n");
 	return 0;
 }
 
@@ -240,7 +238,7 @@ static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s)
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
 
-	//printk(KERN_INFO "DMA TX Buffer is being memory mapped\n");
+	printk(KERN_INFO "DMA RX Buffer is being memory mapped\n");
 
 	if (length > MAX_PKT_LEN)
 	{
@@ -254,6 +252,8 @@ static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s)
 		printk(KERN_ERR "MMAP failed for S2MM\n");
 		return ret;
 	}
+	printk(KERN_INFO "RX MMAP DONE\n");
+
 	return 0;
 }
 
@@ -262,7 +262,7 @@ static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s)
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
 
-	//printk(KERN_INFO "DMA TX Buffer is being memory mapped\n");
+	printk(KERN_INFO "DMA TX Buffer is being memory mapped\n");
 
 	if (length > MAX_PKT_LEN)
 	{
@@ -276,6 +276,7 @@ static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s)
 		printk(KERN_ERR "MMAP failed for MM2S\n");
 		return ret;
 	}
+	printk(KERN_INFO "TX MMAP DONE\n");
 	return 0;
 }
 
@@ -455,7 +456,10 @@ static void __exit test_dma_exit(void)
 	//Reset DMA memory
 	int i = 0;
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
+	{
+		rx_vir_buffer[i] = 0x00000000;
 		tx_vir_buffer[i] = 0x00000000;
+	}
 	printk(KERN_INFO "DMA EXIT: DMA memory reset\n");
 
 	// Exit Device Module

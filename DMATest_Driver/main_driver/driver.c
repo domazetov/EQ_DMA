@@ -38,6 +38,7 @@ static ssize_t test_dma_read(struct file *f, char __user *buf, size_t len, loff_
 static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
 static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s);
 static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s);
+static ssize_t dma_mmap(struct inode *i, struct file *f, struct vm_area_struct *vma_s);
 static int __init test_dma_init(void);
 static void __exit test_dma_exit(void);
 static int test_dma_remove(struct platform_device *pdev);
@@ -55,13 +56,21 @@ struct test_dma_info
 	int irq_num;
 };
 
-//static struct cdev *dma_cdev;
-//static dev_t dma_dev_id;
-//static struct class *dma_class;
-//static struct device *dma_device;
+static struct cdev *dma_cdev;
+static dev_t dma_dev_id;
+static struct class *dma_class;
+static struct device *dma_device;
 
 static struct test_dma_info *vp = NULL;
-
+static struct file_operations dma_fops =
+	{
+		.owner = THIS_MODULE,
+		.open = test_dma_open,
+		.release = test_dma_close,
+		.read = test_dma_read,
+		.write = test_dma_write,
+		.mmap = dma_mmap};
+/*
 static struct file_operations rx_fops =
 	{
 		.owner = THIS_MODULE,
@@ -89,7 +98,7 @@ static struct miscdevice dma_tx = {
 	.minor = MISC_DYNAMIC_MINOR,
 	.name = "dma_tx",
 	.fops = &tx_fops};
-
+*/
 static struct of_device_id test_dma_of_match[] = {
 	{
 		.compatible = "axi_dma",
@@ -233,6 +242,47 @@ static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t len
 	return 0;
 }
 
+static ssize_t dma_mmap(struct inode *i, struct file *f, struct vm_area_struct *vma_s)
+{
+	int minor = MINOR(i->i_rdev);
+	printk(KERN_INFO "MMAP minor = %d", minor);
+
+	switch (minor)
+	{
+	case 0:
+		mmap(vma_s, rx_phy_buffer, rx_vir_buffer);
+		break;
+	case 1:
+		mmap(vma_s, tx_phy_buffer, tx_vir_buffer);
+		break;
+	default:
+		printk(KERN_ERR "Invalid device minor: %d\n", minor);
+	}
+	return 0;
+}
+
+void mmap(struct vm_area_struct *vma_s, dma_addr_t phy_buffer, u32 vir_buffer)
+{
+	int ret = 0;
+	long length = vma_s->vm_end - vma_s->vm_start;
+	printk(KERN_INFO "DMA Buffer is being memory mapped\n");
+
+	if (length > MAX_PKT_LEN)
+	{
+		return -EIO;
+		printk(KERN_ERR "Trying to mmap more space than it's allocated\n");
+	}
+
+	ret = dma_mmap_coherent(NULL, vma_s, vir_buffer, phy_buffer, length);
+	if (ret < 0)
+	{
+		printk(KERN_ERR "MMAP failed\n");
+		return ret;
+	}
+	printk(KERN_INFO "MMAP DONE, length: %d\n", length);
+}
+
+/*
 static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s)
 {
 	int ret = 0;
@@ -252,7 +302,7 @@ static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s)
 		printk(KERN_ERR "MMAP failed for S2MM\n");
 		return ret;
 	}
-	printk(KERN_INFO "RX MMAP DONE\n");
+	printk(KERN_INFO "RX MMAP DONE, length: %d\n", length);
 
 	return 0;
 }
@@ -276,10 +326,10 @@ static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s)
 		printk(KERN_ERR "MMAP failed for MM2S\n");
 		return ret;
 	}
-	printk(KERN_INFO "TX MMAP DONE\n");
+	printk(KERN_INFO "TX MMAP DONE, length: %d\n", length);
 	return 0;
 }
-
+*/
 /****************************************************/
 // IMPLEMENTATION OF DMA related functions
 
@@ -358,7 +408,7 @@ static int __init test_dma_init(void)
 
 	int ret = 0;
 	int i = 0;
-
+	/*
 	ret = misc_register(&dma_rx);
 	if (ret != 0)
 	{
@@ -376,7 +426,8 @@ static int __init test_dma_init(void)
 	}
 
 	pr_info("device registered: %s\n", "/dev/dma_tx");
-	/*
+	*/
+
 	printk(KERN_INFO "DMA INIT: Initialize Module \"%s\"\n", DEVICE_NAME);
 	ret = alloc_chrdev_region(&dma_dev_id, 0, 2, "dma_region");
 	if (ret)
@@ -392,13 +443,6 @@ static int __init test_dma_init(void)
 		goto fail_0;
 	}
 	printk(KERN_INFO "DMA INIT: Successful class chardevs create!\n");
-	dma_device = device_create(dma_class, NULL, MKDEV(MAJOR(dma_dev_id), 0), NULL, "dma_rx");
-	if (dma_device == NULL)
-	{
-		goto fail_1;
-	}
-
-	printk(KERN_INFO "DMA INIT: Device created\n");
 
 	dma_cdev = cdev_alloc();
 	dma_cdev->ops = &rx_fops;
@@ -407,11 +451,23 @@ static int __init test_dma_init(void)
 	if (ret)
 	{
 		printk(KERN_ERR "DMA INIT: Failed to add cdev\n");
+		goto fail_1;
+	}
+
+	dma_device = device_create(dma_class, NULL, MKDEV(MAJOR(dma_dev_id), MINOR(dma_dev_id)), NULL, "dma_rx");
+	if (dma_device == NULL)
+	{
 		goto fail_2;
 	}
-*/
 
-	printk(KERN_INFO "DMA INIT: Module init done\n");
+	dma_device = device_create(dma_class, NULL, MKDEV(MAJOR(dma_dev_id), MINOR(dma_dev_id) + 1), NULL, "dma_tx");
+	if (dma_device == NULL)
+	{
+		goto fail_2;
+	}
+	printk(KERN_INFO "DMA INIT: Device created\n");
+
+	//printk(KERN_INFO "DMA INIT: Module init done\n");
 
 	rx_vir_buffer = dma_alloc_coherent(NULL, MAX_PKT_LEN, &rx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!rx_vir_buffer)
@@ -437,16 +493,17 @@ static int __init test_dma_init(void)
 
 	printk(KERN_INFO "DMA INIT: DMA memory reset.\n");
 	return platform_driver_register(&dma_driver);
-	/*
+
 fail_3:
 	cdev_del(dma_cdev);
 fail_2:
 	device_destroy(dma_class, MKDEV(MAJOR(dma_dev_id), 0));
+	device_destroy(dma_class, MKDEV(MAJOR(dma_dev_id), 1));
 fail_1:
 	class_destroy(dma_class);
 fail_0:
 	unregister_chrdev_region(dma_dev_id, 1);
-	return -1;*/
+	return -1;
 
 	return ret;
 }
@@ -464,13 +521,14 @@ static void __exit test_dma_exit(void)
 
 	// Exit Device Module
 	platform_driver_unregister(&dma_driver);
-	//cdev_del(dma_cdev);
-	//device_destroy(dma_class, MKDEV(MAJOR(dma_dev_id), 0));
-	//class_destroy(dma_class);
-	//unregister_chrdev_region(dma_dev_id, 1);
-	misc_deregister(&dma_rx);
-	misc_deregister(&dma_tx);
-	pr_info("device unregistered\n");
+	cdev_del(dma_cdev);
+	device_destroy(dma_class, MKDEV(MAJOR(dma_dev_id), 0));
+	device_destroy(dma_class, MKDEV(MAJOR(dma_dev_id), 1));
+	class_destroy(dma_class);
+	unregister_chrdev_region(dma_dev_id, 1);
+	//misc_deregister(&dma_rx);
+	//misc_deregister(&dma_tx);
+	//pr_info("device unregistered\n");
 
 	dma_free_coherent(NULL, MAX_PKT_LEN, tx_vir_buffer, tx_phy_buffer);
 	printk(KERN_INFO "DMA EXIT: Exit device module finished\"%s\".\n", DEVICE_NAME);

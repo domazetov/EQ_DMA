@@ -36,8 +36,8 @@ static int test_dma_open(struct inode *i, struct file *f);
 static int test_dma_close(struct inode *i, struct file *f);
 static ssize_t test_dma_read(struct file *f, char __user *buf, size_t len, loff_t *off);
 static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
-static ssize_t rx_dma_mmap(struct file *f, struct vm_area_struct *vma_s);
-static ssize_t tx_dma_mmap(struct file *f, struct vm_area_struct *vma_s);
+static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s);
+static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s);
 static int __init test_dma_init(void);
 static int rx_init(void);
 static int tx_init(void);
@@ -57,10 +57,10 @@ struct test_dma_info
 	int irq_num;
 };
 
-static struct cdev *dma_cdev;
-static dev_t dma_dev_id;
-static struct class *dma_class;
-static struct device *dma_device;
+//static struct cdev *dma_cdev;
+//static dev_t dma_dev_id;
+//static struct class *dma_class;
+//static struct device *dma_device;
 
 static struct test_dma_info *vp = NULL;
 
@@ -352,7 +352,7 @@ u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt
 //***************************************************
 // INIT AND EXIT FUNCTIONS OF THE DRIVER
 
-static int __init mm2s_dma_init(void)
+static int __init test_dma_init(void)
 {
 
 	int ret = 0;
@@ -438,19 +438,19 @@ static int __init mm2s_dma_init(void)
 	return platform_driver_register(&dma_driver);
 	/*
 fail_3:
-	cdev_del(my_cdev);
+	cdev_del(dma_cdev);
 fail_2:
-	device_destroy(my_class, MKDEV(MAJOR(my_dev_id), 0));
+	device_destroy(dma_class, MKDEV(MAJOR(dma_dev_id), 0));
 fail_1:
-	class_destroy(my_class);
+	class_destroy(dma_class);
 fail_0:
-	unregister_chrdev_region(my_dev_id, 1);
+	unregister_chrdev_region(dma_dev_id, 1);
 	return -1;*/
 
 	return ret;
 }
 
-static void __exit mm2s_dma_exit(void)
+static void __exit test_dma_exit(void)
 {
 	//Reset DMA memory
 	int i = 0;
@@ -460,10 +460,10 @@ static void __exit mm2s_dma_exit(void)
 
 	// Exit Device Module
 	platform_driver_unregister(&dma_driver);
-	cdev_del(my_cdev);
-	//device_destroy(my_class, MKDEV(MAJOR(my_dev_id), 0));
-	//class_destroy(my_class);
-	//unregister_chrdev_region(my_dev_id, 1);
+	//cdev_del(dma_cdev);
+	//device_destroy(dma_class, MKDEV(MAJOR(dma_dev_id), 0));
+	//class_destroy(dma_class);
+	//unregister_chrdev_region(dma_dev_id, 1);
 	misc_deregister(&dma_rx);
 	misc_deregister(&dma_tx);
 	pr_info("device unregistered\n");

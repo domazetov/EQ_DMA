@@ -362,7 +362,6 @@ static int rx_init(void)
 	}
 	printk(KERN_INFO "RX DMA Init: Successful CHRDEV!\n");
 
-	printk(KERN_INFO "RX DMA Init: Successful class chardev create!\n");
 	rx_device = device_create(dma_class, NULL, MKDEV(MAJOR(rx_dev_id), 0), NULL, "rx_dma");
 	if (rx_device == NULL)
 	{
@@ -418,7 +417,6 @@ static int tx_init(void)
 	}
 	printk(KERN_INFO "TX DMA Init: Successful CHRDEV!\n");
 
-	printk(KERN_INFO "TX DMA Init: Successful class chardev create!\n");
 	tx_device = device_create(dma_class, NULL, MKDEV(MAJOR(tx_dev_id), 0), NULL, "tx_dma");
 	if (tx_device == NULL)
 	{
@@ -462,12 +460,16 @@ fail_1:
 
 static int __init test_dma_init(void)
 {
-	dma_class = class_create(THIS_MODULE, DRIVER_NAME);
-	if (dma_class == NULL)
+	static struct class *dma_class_local = NULL;
+
+	dma_class_local = class_create(THIS_MODULE, DRIVER_NAME);
+	if (dma_class_local == NULL)
 	{
-		printk(KERN_ALERT "RX DMA Init: Failed class create!\n");
+		printk(KERN_ALERT "DMA Init: Failed class create!\n");
 		goto fail_0;
 	}
+	dma_class = dma_class_local;
+	printk(KERN_INFO "DMA INIT: Successful class chardevs create!\n");
 
 	rx_init();
 	tx_init();

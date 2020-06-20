@@ -220,13 +220,13 @@ static int test_dma_remove(struct platform_device *pdev)
 // IMPLEMENTATION OF FILE OPERATION FUNCTIONS
 static int test_dma_open(struct inode *i, struct file *f)
 {
-	printk(KERN_INFO "DMA opened\n");
+	//printk(KERN_INFO "DMA opened\n");
 	return 0;
 }
 
 static int test_dma_close(struct inode *i, struct file *f)
 {
-	printk(KERN_INFO "DMA closed\n");
+	//printk(KERN_INFO "DMA closed\n");
 	return 0;
 }
 

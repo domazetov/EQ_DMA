@@ -58,12 +58,14 @@ struct test_dma_info
 
 static struct cdev *tx_cdev;
 static dev_t tx_dev_id;
-static struct class *tx_class;
+//static struct class *tx_class;
 static struct device *tx_device;
+
+static struct class *dma_class;
 
 static struct cdev *rx_cdev;
 static dev_t rx_dev_id;
-static struct class *rx_class;
+//static struct class *rx_class;
 static struct device *rx_device;
 
 static struct test_dma_info *vp = NULL;
@@ -359,14 +361,9 @@ static int rx_init(void)
 		return -1;
 	}
 	printk(KERN_INFO "RX DMA Init: Successful CHRDEV!\n");
-	rx_class = class_create(THIS_MODULE, "rx_driver");
-	if (rx_class == NULL)
-	{
-		printk(KERN_ALERT "RX DMA Init: Failed class create!\n");
-		goto fail_0;
-	}
+
 	printk(KERN_INFO "RX DMA Init: Successful class chardev create!\n");
-	rx_device = device_create(rx_class, NULL, MKDEV(MAJOR(rx_dev_id), 0), NULL, "rx_dma");
+	rx_device = device_create(dma_class, NULL, MKDEV(MAJOR(rx_dev_id), 0), NULL, "rx_dma");
 	if (rx_device == NULL)
 	{
 		goto fail_1;
@@ -401,11 +398,9 @@ static int rx_init(void)
 fail_3:
 	cdev_del(rx_cdev);
 fail_2:
-	device_destroy(rx_class, MKDEV(MAJOR(rx_dev_id), 0));
+	device_destroy(dma_class, MKDEV(MAJOR(rx_dev_id), 0));
 fail_1:
-	class_destroy(rx_class);
-fail_0:
-	unregister_chrdev_region(rx_dev_id, 1);
+	class_destroy(dma_class);
 	return -1;
 }
 
@@ -422,14 +417,9 @@ static int tx_init(void)
 		return -1;
 	}
 	printk(KERN_INFO "TX DMA Init: Successful CHRDEV!\n");
-	tx_class = class_create(THIS_MODULE, "tx_driver");
-	if (tx_class == NULL)
-	{
-		printk(KERN_ALERT "TX DMA Init: Failed class create!\n");
-		goto fail_0;
-	}
+
 	printk(KERN_INFO "TX DMA Init: Successful class chardev create!\n");
-	tx_device = device_create(tx_class, NULL, MKDEV(MAJOR(tx_dev_id), 0), NULL, "tx_dma");
+	tx_device = device_create(dma_class, NULL, MKDEV(MAJOR(tx_dev_id), 0), NULL, "tx_dma");
 	if (tx_device == NULL)
 	{
 		goto fail_1;
@@ -464,19 +454,28 @@ static int tx_init(void)
 fail_3:
 	cdev_del(tx_cdev);
 fail_2:
-	device_destroy(tx_class, MKDEV(MAJOR(tx_dev_id), 0));
+	device_destroy(dma_class, MKDEV(MAJOR(tx_dev_id), 0));
 fail_1:
-	class_destroy(tx_class);
-fail_0:
-	unregister_chrdev_region(tx_dev_id, 1);
+	class_destroy(dma_class);
 	return -1;
 }
 
 static int __init test_dma_init(void)
 {
+	dma_class = class_create(THIS_MODULE, DRIVER_NAME);
+	if (dma_class == NULL)
+	{
+		printk(KERN_ALERT "RX DMA Init: Failed class create!\n");
+		goto fail_0;
+	}
+
 	rx_init();
 	tx_init();
 	return platform_driver_register(&test_dma_driver);
+
+fail_0:
+	unregister_chrdev_region(tx_dev_id, 1);
+	return -1;
 }
 
 static void rx_dma_exit(void)
@@ -490,8 +489,7 @@ static void rx_dma_exit(void)
 	// Exit Device Module
 	platform_driver_unregister(&test_dma_driver);
 	cdev_del(rx_cdev);
-	device_destroy(rx_class, MKDEV(MAJOR(rx_dev_id), 0));
-	class_destroy(rx_class);
+	device_destroy(dma_class, MKDEV(MAJOR(rx_dev_id), 0));
 	unregister_chrdev_region(rx_dev_id, 1);
 	dma_free_coherent(NULL, MAX_PKT_LEN, rx_vir_buffer, rx_phy_buffer);
 	printk(KERN_INFO "RX DMA EXIT: Exit device module finished\"%s\".\n", DEVICE_NAME);
@@ -508,8 +506,7 @@ static void tx_dma_exit(void)
 	// Exit Device Module
 	platform_driver_unregister(&test_dma_driver);
 	cdev_del(tx_cdev);
-	device_destroy(tx_class, MKDEV(MAJOR(tx_dev_id), 0));
-	class_destroy(tx_class);
+	device_destroy(dma_class, MKDEV(MAJOR(tx_dev_id), 0));
 	unregister_chrdev_region(tx_dev_id, 1);
 	dma_free_coherent(NULL, MAX_PKT_LEN, tx_vir_buffer, tx_phy_buffer);
 	printk(KERN_INFO "TX DMA EXIT: Exit device module finished\"%s\".\n", DEVICE_NAME);
@@ -519,6 +516,7 @@ static void __exit test_dma_exit(void)
 {
 	rx_dma_exit();
 	tx_dma_exit();
+	class_destroy(dma_class);
 }
 
 module_init(test_dma_init);

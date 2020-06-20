@@ -15,6 +15,7 @@ int main(void)
 	int counter, i, x = 0;
 	int *rx;
 	int *tx;
+	FILE *fp;
 
 	int input[TEST_SIZE];
 	int output[TEST_SIZE];
@@ -33,6 +34,8 @@ int main(void)
 		printf("Unable to open DMA S2MM");
 		exit(EXIT_FAILURE);
 	}
+
+	fp = fopen("output.txt", "w+");
 
 	rx = (int *)mmap(NULL, TEST_SIZE,
 					 PROT_READ | PROT_WRITE, MAP_SHARED, rx_proxy_fd, 0);
@@ -56,8 +59,13 @@ int main(void)
 	}
 
 	memcpy(tx, input, TEST_SIZE);
-
 	memcpy(output, rx, TEST_SIZE);
+
+	for (i = 0; i < TEST_SIZE; i++)
+	{
+		fprintf(fp, "%d\n", output[i]);
+	}
+	fclose(fp);
 
 	munmap(tx, TEST_SIZE);
 	munmap(rx, TEST_SIZE);

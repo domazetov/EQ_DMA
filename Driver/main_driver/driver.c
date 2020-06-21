@@ -43,11 +43,11 @@ static int axi_dma_remove(struct platform_device *pdev);
 
 static irqreturn_t rx_dma_isr(int irq, void *dev_id);
 int rx_dma_init(void __iomem *base_address);
-u32 rx_dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
+u32 rx_dma_simple_write(dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
 
 static irqreturn_t tx_dma_isr(int irq, void *dev_id);
 int tx_dma_init(void __iomem *base_address);
-u32 tx_dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
+u32 tx_dma_simple_write(dma_addr_t TxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
 
 //*********************GLOBAL VARIABLES*************************************
 struct axi_dma_info
@@ -125,7 +125,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 	case 0:
 		// Get memory for structure axi_dma_info
 		rx_vp = (struct axi_dma_info *)kmalloc(sizeof(struct axi_dma_info), GFP_KERNEL);
-		if (!vp)
+		if (!rx_vp)
 		{
 			printk(KERN_ALERT "DMA PROBE: Could not allocate memory for structure axi_dma_info.\n");
 			return -ENOMEM;
@@ -160,7 +160,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 			goto error2;
 		}
 
-		if (request_irq(rx_vp->irq_num, dma_isr, 0, DEVICE_NAME, NULL))
+		if (request_irq(rx_vp->irq_num, rx_dma_isr, 0, DEVICE_NAME, NULL))
 		{
 			printk(KERN_ERR "DMA PROBE: Could not register IRQ %d.\n", rx_vp->irq_num);
 			return -EIO;
@@ -224,7 +224,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 			goto error2;
 		}
 
-		if (request_irq(tx_vp->irq_num, dma_isr, 0, DEVICE_NAME, NULL))
+		if (request_irq(tx_vp->irq_num, tx_dma_isr, 0, DEVICE_NAME, NULL))
 		{
 			printk(KERN_ERR "DMA PROBE: Could not register IRQ %d.\n", tx_vp->irq_num);
 			return -EIO;

@@ -41,9 +41,13 @@ static int __init axi_dma_init(void);
 static void __exit axi_dma_exit(void);
 static int axi_dma_remove(struct platform_device *pdev);
 
-static irqreturn_t dma_isr(int irq, void *dev_id);
-int dma_init(void __iomem *base_address);
-u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
+static irqreturn_t rx_dma_isr(int irq, void *dev_id);
+int rx_dma_init(void __iomem *base_address);
+u32 rx_dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
+
+static irqreturn_t tx_dma_isr(int irq, void *dev_id);
+int tx_dma_init(void __iomem *base_address);
+u32 tx_dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
 
 //*********************GLOBAL VARIABLES*************************************
 struct axi_dma_info
@@ -59,7 +63,8 @@ static dev_t dma_dev_id;
 static struct class *dma_class;
 static struct device *dma_device;
 
-static struct axi_dma_info *vp = NULL;
+static struct axi_dma_info *rx_vp = NULL;
+static struct axi_dma_info *tx_vp = NULL;
 static struct file_operations dma_fops =
 	{
 		.owner = THIS_MODULE,
@@ -70,12 +75,12 @@ static struct file_operations dma_fops =
 		.mmap = dma_mmap};
 
 static struct of_device_id axi_dma_of_match[] = {
-	{
+	/*{
 		.compatible = "axi_dma_mm2s",
 	},
 	{
 		.compatible = "axi_dma_s2mm",
-	},
+	},*/
 	{
 		.compatible = "axi_dma",
 	},
@@ -100,95 +105,189 @@ dma_addr_t rx_phy_buffer;
 u32 *rx_vir_buffer;
 //***************************************************************************
 // PROBE AND REMOVE
+int channel = 0;
+
 static int axi_dma_probe(struct platform_device *pdev)
 {
 	struct resource *r_mem;
 	int rc = 0;
 
-	printk(KERN_INFO "DMA PROBE: Probing\n");
+	printk(KERN_INFO "DMA PROBE: Probing.\n");
 	// Get phisical register adress space from device tree
 	r_mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!r_mem)
 	{
-		printk(KERN_ALERT "DMA PROBE: Failed to get reg resource\n");
+		printk(KERN_ALERT "DMA PROBE: Failed to get reg resource.\n");
 		return -ENODEV;
 	}
-	// Get memory for structure axi_dma_info
-	vp = (struct axi_dma_info *)kmalloc(sizeof(struct axi_dma_info), GFP_KERNEL);
-	if (!vp)
+	switch (channel)
 	{
-		printk(KERN_ALERT "DMA PROBE: Could not allocate memory for structure axi_dma_info\n");
-		return -ENOMEM;
+	case 0:
+		// Get memory for structure axi_dma_info
+		rx_vp = (struct axi_dma_info *)kmalloc(sizeof(struct axi_dma_info), GFP_KERNEL);
+		if (!vp)
+		{
+			printk(KERN_ALERT "DMA PROBE: Could not allocate memory for structure axi_dma_info.\n");
+			return -ENOMEM;
+		}
+		// Put phisical adresses in timer_info structure
+		rx_vp->mem_start = r_mem->start;
+		rx_vp->mem_end = r_mem->end;
+
+		// Reserve that memory space for this driver
+		if (!request_mem_region(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1, DRIVER_NAME))
+		{
+			printk(KERN_ALERT "DMA PROBE: Could not lock memory region at %p.\n", (void *)rx_vp->mem_start);
+			rc = -EBUSY;
+			goto error1;
+		}
+		// Remap phisical to virtual adresses
+
+		rx_vp->base_addr = ioremap(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1);
+		if (!rx_vp->base_addr)
+		{
+			printk(KERN_ALERT "DMA PROBE: Could not allocate memory for remapping.\n");
+			rc = -EIO;
+			goto error2;
+		}
+
+		// Get irq num
+		rx_vp->irq_num = platform_get_irq(pdev, 0);
+		if (!vp->irq_num)
+		{
+			printk(KERN_ERR "DMA PROBE: Could not get IRQ resource.\n");
+			rc = -ENODEV;
+			goto error2;
+		}
+
+		if (request_irq(rx_vp->irq_num, dma_isr, 0, DEVICE_NAME, NULL))
+		{
+			printk(KERN_ERR "DMA PROBE: Could not register IRQ %d.\n", rx_vp->irq_num);
+			return -EIO;
+			goto error3;
+		}
+		else
+		{
+			printk(KERN_INFO "DMA PROBE: Registered IRQ %d.\n", rx_vp->irq_num);
+		}
+
+		/* INIT DMA */
+		rx_dma_init(rx_vp->base_addr);
+		rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, rx_vp->base_addr); // helper function, defined later
+
+		printk(KERN_NOTICE "DMA PROBE: RX Test platform driver registered.\n");
+		return 0; //ALL OK
+
+	error3:
+		iounmap(rx_vp->base_addr);
+	error2:
+		release_mem_region(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1);
+		kfree(rx_vp);
+	error1:
+		return rc;
+		break;
+	case 1:
+		// Get memory for structure axi_dma_info
+		tx_vp = (struct axi_dma_info *)kmalloc(sizeof(struct axi_dma_info), GFP_KERNEL);
+		if (!tx_vp)
+		{
+			printk(KERN_ALERT "DMA PROBE: Could not allocate memory for structure axi_dma_info.\n");
+			return -ENOMEM;
+		}
+		// Put phisical adresses in timer_info structure
+		tx_vp->mem_start = r_mem->start;
+		tx_vp->mem_end = r_mem->end;
+
+		// Reserve that memory space for this driver
+		if (!request_mem_region(tx_vp->mem_start, tx_vp->mem_end - tx_vp->mem_start + 1, DRIVER_NAME))
+		{
+			printk(KERN_ALERT "DMA PROBE: Could not lock memory region at %p.\n", (void *)tx_vp->mem_start);
+			rc = -EBUSY;
+			goto error1;
+		}
+		// Remap phisical to virtual adresses
+
+		tx_vp->base_addr = ioremap(tx_vp->mem_start, tx_vp->mem_end - tx_vp->mem_start + 1);
+		if (!tx_vp->base_addr)
+		{
+			printk(KERN_ALERT "DMA PROBE: Could not allocate memory for remapping.\n");
+			rc = -EIO;
+			goto error2;
+		}
+
+		// Get irq num
+		tx_vp->irq_num = platform_get_irq(pdev, 0);
+		if (!tx_vp->irq_num)
+		{
+			printk(KERN_ERR "DMA PROBE: Could not get IRQ resource.\n");
+			rc = -ENODEV;
+			goto error2;
+		}
+
+		if (request_irq(tx_vp->irq_num, dma_isr, 0, DEVICE_NAME, NULL))
+		{
+			printk(KERN_ERR "DMA PROBE: Could not register IRQ %d.\n", tx_vp->irq_num);
+			return -EIO;
+			goto error3;
+		}
+		else
+		{
+			printk(KERN_INFO "DMA PROBE: Registered IRQ %d.\n", tx_vp->irq_num);
+		}
+
+		/* INIT DMA */
+		tx_dma_init(tx_vp->base_addr);
+		tx_dma_simple_write(tx_phy_buffer MAX_PKT_LEN, tx_vp->base_addr); // helper function, defined later
+
+		channel++;
+		printk(KERN_NOTICE "DMA PROBE: TX Test platform driver registered.\n");
+		return 0; //ALL OK
+
+	error3:
+		iounmap(tx_vp->base_addr);
+	error2:
+		release_mem_region(tx_vp->mem_start, tx_vp->mem_end - tx_vp->mem_start + 1);
+		kfree(tx_vp);
+	error1:
+		return rc;
+		break;
+	default:
+		printk(KERN_INFO "DMA PROBE: Wrong channel.\n");
+		return -1;
 	}
-	// Put phisical adresses in timer_info structure
-	vp->mem_start = r_mem->start;
-	vp->mem_end = r_mem->end;
-
-	// Reserve that memory space for this driver
-	if (!request_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1, DRIVER_NAME))
-	{
-		printk(KERN_ALERT "DMA PROBE: Could not lock memory region at %p\n", (void *)vp->mem_start);
-		rc = -EBUSY;
-		goto error1;
-	}
-	// Remap phisical to virtual adresses
-
-	vp->base_addr = ioremap(vp->mem_start, vp->mem_end - vp->mem_start + 1);
-	if (!vp->base_addr)
-	{
-		printk(KERN_ALERT "DMA PROBE: Could not allocate memory for remapping\n");
-		rc = -EIO;
-		goto error2;
-	}
-
-	// Get irq num
-	vp->irq_num = platform_get_irq(pdev, 0);
-	if (!vp->irq_num)
-	{
-		printk(KERN_ERR "DMA PROBE: Could not get IRQ resource\n");
-		rc = -ENODEV;
-		goto error2;
-	}
-
-	if (request_irq(vp->irq_num, dma_isr, 0, DEVICE_NAME, NULL))
-	{
-		printk(KERN_ERR "DMA PROBE: Could not register IRQ %d\n", vp->irq_num);
-		return -EIO;
-		goto error3;
-	}
-	else
-	{
-		printk(KERN_INFO "DMA PROBE: Registered IRQ %d\n", vp->irq_num);
-	}
-
-	/* INIT DMA */
-	dma_init(vp->base_addr);
-	dma_simple_write(tx_phy_buffer, rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
-
-	printk(KERN_NOTICE "DMA PROBE: Test platform driver registered\n");
-	return 0; //ALL OK
-
-error3:
-	iounmap(vp->base_addr);
-error2:
-	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
-	kfree(vp);
-error1:
-	return rc;
+	printk(KERN_INFO "DMA PROBE: Done.\n");
 }
 
 static int axi_dma_remove(struct platform_device *pdev)
 {
 	u32 reset = 0x00000004;
-	// writing to MM2S_DMACR register. Seting reset bit (3. bit)
-	printk(KERN_INFO "DMA PROBE: Resseting");
-	iowrite32(reset, vp->base_addr);
 
-	free_irq(vp->irq_num, NULL);
-	iounmap(vp->base_addr);
-	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
-	kfree(vp);
-	printk(KERN_INFO "DMA PROBE: DMA removed");
+	printk(KERN_INFO "DMA PROBE: Resseting.\n");
+	switch (channel)
+	{
+	case 0:
+		iowrite32(reset, rx_vp->base_addr + 48); // writing to S2MM_DMACR register. Seting reset bit (3. bit)
+
+		free_irq(rx_vp->irq_num, NULL);
+		iounmap(rx_vp->base_addr);
+		release_mem_region(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1);
+		kfree(rx_vp);
+		printk(KERN_INFO "DMA PROBE: RX DMA removed.\n");
+		break;
+	case 1:
+		iowrite32(reset, tx_vp->base_addr); // writing to MM2S_DMACR register. Seting reset bit (3. bit)
+
+		free_irq(tx_vp->irq_num, NULL);
+		iounmap(tx_vp->base_addr);
+		release_mem_region(tx_vp->mem_start, tx_vp->mem_end - tx_vp->mem_start + 1);
+		kfree(tx_vp);
+		printk(KERN_INFO "DMA PROBE: RX DMA removed.\n");
+		channel--;
+		break;
+	default:
+		printk(KERN_INFO "DMA Probe: Wrong Channel.\n")
+	}
+	printk(KERN_INFO "DMA PROBE: Probe removed.\n");
 	return 0;
 }
 
@@ -208,13 +307,13 @@ static int axi_dma_close(struct inode *i, struct file *f)
 
 static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
-	printk("DMA read\n");
+	printk("DMA read.\n");
 	return 0;
 }
 
 static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off)
 {
-	printk("DMA write\n");
+	printk("DMA write.\n");
 	return 0;
 }
 
@@ -247,85 +346,125 @@ static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 
 	if (ret < 0)
 	{
-		printk(KERN_ERR "MMAP failed. [%d]\n", minor);
+		printk(KERN_ERR "MMAP failed. [%d].\n", minor);
 		return ret;
 	}
 
-	printk(KERN_INFO "MMAP done, length: %ld\n", length);
+	printk(KERN_INFO "MMAP done, length: %ld.\n", length);
 	return 0;
 }
 
 /****************************************************/
 // IMPLEMENTATION OF DMA related functions
 
-static irqreturn_t dma_isr(int irq, void *dev_id)
+static irqreturn_t rx_dma_isr(int irq, void *dev_id)
 {
 	u32 IrqStatus;
 	/* Read pending interrupts */
-	IrqStatus = ioread32(vp->base_addr + 4 + 48);			   //read irq status from S2MM_DMASR register
-	iowrite32(IrqStatus | 0x00007000, vp->base_addr + 4 + 48); //clear irq status in S2MM_DMASR register
-
-	IrqStatus = ioread32(vp->base_addr + 4);			  //read irq status from MM2S_DMASR register
-	iowrite32(IrqStatus | 0x00007000, vp->base_addr + 4); //clear irq status in MM2S_DMASR register
+	IrqStatus = ioread32(rx_vp->base_addr + 4 + 48);			  //read irq status from S2MM_DMASR register
+	iowrite32(IrqStatus | 0x00007000, rx_vp->base_addr + 4 + 48); //clear irq status in S2MM_DMASR register
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
-
+	IrqStatus = ioread32(rx_vp->base_addr + 4 + 48);
 	/*Send a transaction*/
-	dma_simple_write(tx_phy_buffer, rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
+	dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, rx_vp->base_addr); //My function that starts a DMA transaction
 
-	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\n");
+	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", int(IrqStatus));
 	return IRQ_HANDLED;
 }
 
-int dma_init(void __iomem *base_address)
+static irqreturn_t tx_dma_isr(int irq, void *dev_id)
+{
+	u32 IrqStatus;
+	/* Read pending interrupts */
+	IrqStatus = ioread32(tx_vp->base_addr + 4);				 //read irq status from MM2S_DMASR register
+	iowrite32(IrqStatus | 0x00007000, tx_vp->base_addr + 4); //clear irq status in MM2S_DMASR register
+	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
+	IrqStatus = ioread32(tx_vp->base_addr + 4);
+	/*Send a transaction*/
+	dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, tx_vp->base_addr); //My function that starts a DMA transaction
+
+	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", int(IrqStatus));
+	return IRQ_HANDLED;
+}
+
+int rx_dma_init(void __iomem *base_address)
+{
+	u32 reset = 0x00000004;
+	u32 IOC_IRQ_EN;
+	u32 ERR_IRQ_EN;
+	u32 S2MM_DMACR_reg;
+	u32 en_interrupt;
+
+	IOC_IRQ_EN = 1 << 12; // this is IOC_IrqEn bit in S2MM_DMACR register
+	ERR_IRQ_EN = 1 << 14; // this is Err_IrqEn bit in S2MM_DMACR register
+
+	iowrite32(reset, base_address + 48); // writing to S2MM_DMACR register. Seting reset bit (3. bit) Resets whole DMA
+
+	S2MM_DMACR_reg = ioread32(base_address + 48);
+
+	en_interrupt = S2MM_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in S2MM_DMACR
+	iowrite32(en_interrupt, base_address + 48);				 // writing to S2MM_DMACR register
+
+	S2MM_DMACR_reg = ioread32(base_address + 48);
+	printk(KERN_INFO "DMA Init: Reset and interrupts set!\nS2MM_DMACR: 0x%x\n", (int)S2MM_DMACR_reg);
+
+	return 0;
+}
+
+int tx_dma_init(void __iomem *base_address)
 {
 	u32 reset = 0x00000004;
 	u32 IOC_IRQ_EN;
 	u32 ERR_IRQ_EN;
 	u32 MM2S_DMACR_reg;
-	u32 S2MM_DMACR_reg;
 	u32 en_interrupt;
-	u32 Read_reg;
 
 	IOC_IRQ_EN = 1 << 12; // this is IOC_IrqEn bit in MM2S_DMACR register
 	ERR_IRQ_EN = 1 << 14; // this is Err_IrqEn bit in MM2S_DMACR register
 
 	iowrite32(reset, base_address); // writing to MM2S_DMACR register. Seting reset bit (3. bit) Resets whole DMA
 
-	S2MM_DMACR_reg = ioread32(base_address + 48);
 	MM2S_DMACR_reg = ioread32(base_address); // Reading from MM2S_DMACR register inside DMA
 
-	en_interrupt = S2MM_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in S2MM_DMACR
-	iowrite32(en_interrupt, base_address);					 // writing to S2MM_DMACR register
-
 	en_interrupt = MM2S_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in MM2S_DMACR
-	iowrite32(en_interrupt, base_address + 48);				 // writing to MM2S_DMACR register
+	iowrite32(en_interrupt, base_address);					 // writing to MM2S_DMACR register
 
-	Read_reg = ioread32(base_address + 48);
-	printk(KERN_INFO "DMA Init: Reset and interrupts set!\nS2MM_DMACR: 0x%x\n", (int)Read_reg);
+	MM2S_DMACR_reg = ioread32(base_address);
+	printk(KERN_INFO "DMA Init: Reset and interrupts set!\nMM2S_DMACR: 0x%x\n", (int)MM2S_DMACR_reg);
 
 	return 0;
 }
 
-u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address)
+u32 rx_dma_simple_write(dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address)
 {
-	u32 MM2S_DMACR_reg;
 	u32 S2MM_DMACR_reg;
-	u32 Read_reg;
 	S2MM_DMACR_reg = ioread32(base_address + 48); // READ from S2MM_DMACR register
-	MM2S_DMACR_reg = ioread32(base_address);	  // READ from MM2S_DMACR register
 
 	iowrite32(0x1 | S2MM_DMACR_reg, base_address + 48); // set RS bit in S2MM_DMACR register (this bit starts the DMA)
-	iowrite32(0x1 | MM2S_DMACR_reg, base_address);		// set RS bit in MM2S_DMACR register (this bit starts the DMA)
 
-	iowrite32((u32)RxBufferPtr, base_address + 24 + 48); // Write into S2MM_SA register the value of RxBufferPtr.
-	iowrite32((u32)TxBufferPtr, base_address + 24);		 // Write into MM2S_SA register the value of TxBufferPtr.
+	iowrite32((u32)RxBufferPtr, base_address + 24 + 48); // Write into S2MM_DA register the value of RxBufferPtr.
 	// With this, the DMA knows from where to start.
 
 	iowrite32(max_pkt_len, base_address + 40 + 48); // Write into S2MM_LENGTH register. This is the length of a tranaction.
-	iowrite32(max_pkt_len, base_address + 40);		// Write into MM2S_LENGTH register. This is the length of a tranaction.
 
-	Read_reg = ioread32(base_address + 48);
-	printk(KERN_INFO "DMA Init: DMACR SA and LENGTH registers set!\nS2MM_DMACR: 0x%x	length: %d\n", (int)Read_reg, (int)max_pkt_len);
+	S2MM_DMACR_reg = ioread32(base_address + 48);
+	printk(KERN_INFO "DMA Init: DMACR SA and LENGTH registers set!\nS2MM_DMACR: 0x%x	length: %d\n", (int)S2MM_DMACR_reg, (int)max_pkt_len);
+	return 0;
+}
+
+u32 tx_dma_simple_write(dma_addr_t TxBufferPtr, u32 max_pkt_len, void __iomem *base_address)
+{
+	u32 MM2S_DMACR_reg;
+	MM2S_DMACR_reg = ioread32(base_address); // READ from MM2S_DMACR register
+
+	iowrite32(0x1 | MM2S_DMACR_reg, base_address); // set RS bit in MM2S_DMACR register (this bit starts the DMA)
+
+	iowrite32((u32)TxBufferPtr, base_address + 24); // Write into MM2S_SA register the value of TxBufferPtr.
+	// With this, the DMA knows from where to start.
+	iowrite32(max_pkt_len, base_address + 40); // Write into MM2S_LENGTH register. This is the length of a tranaction.
+
+	MM2S_DMACR_reg = ioread32(base_address);
+	printk(KERN_INFO "DMA Init: DMACR SA and LENGTH registers set!\nMM2S_DMACR: 0x%x	length: %d\n", (int)MM2S_DMACR_reg, (int)max_pkt_len);
 	return 0;
 }
 
@@ -338,7 +477,7 @@ static int __init axi_dma_init(void)
 	int ret = 0;
 	int i = 0;
 
-	printk(KERN_INFO "DMA INIT: Initialize Module \"%s\"\n", DEVICE_NAME);
+	printk(KERN_INFO "DMA INIT: Initialize Module \"%s\".\n", DEVICE_NAME);
 	ret = alloc_chrdev_region(&dma_dev_id, 0, 2, "dma_region");
 	if (ret)
 	{
@@ -365,7 +504,7 @@ static int __init axi_dma_init(void)
 	{
 		goto fail_2;
 	}
-	printk(KERN_INFO "DMA INIT: Device created\n");
+	printk(KERN_INFO "DMA INIT: Device created.\n");
 
 	dma_cdev = cdev_alloc();
 	dma_cdev->ops = &dma_fops;
@@ -373,11 +512,11 @@ static int __init axi_dma_init(void)
 	ret = cdev_add(dma_cdev, dma_dev_id, 2);
 	if (ret)
 	{
-		printk(KERN_ERR "DMA INIT: Failed to add cdev\n");
+		printk(KERN_ERR "DMA INIT: Failed to add cdev.\n");
 		goto fail_3;
 	}
 
-	//printk(KERN_INFO "DMA INIT: Module init done\n");
+	//printk(KERN_INFO "DMA INIT: Module init done.\n");
 
 	rx_vir_buffer = dma_alloc_coherent(NULL, MAX_PKT_LEN, &rx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!rx_vir_buffer)
@@ -386,7 +525,7 @@ static int __init axi_dma_init(void)
 		goto fail_4;
 	}
 	else
-		printk("DMA INIT: Successfully allocated memory for dma RX buffer\n");
+		printk("DMA INIT: Successfully allocated memory for dma RX buffer.\n");
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 		rx_vir_buffer[i] = 0x00000000;
 
@@ -397,7 +536,7 @@ static int __init axi_dma_init(void)
 		goto fail_4;
 	}
 	else
-		printk("DMA INIT: Successfully allocated memory for dma TX buffer\n");
+		printk("DMA INIT: Successfully allocated memory for dma TX buffer.\n");
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 		tx_vir_buffer[i] = 0x00000000;
 
@@ -428,7 +567,7 @@ static void __exit axi_dma_exit(void)
 		//rx_vir_buffer[i] = 0x00000000;
 		tx_vir_buffer[i] = 0x00000000;
 	}
-	printk(KERN_INFO "DMA EXIT: DMA memory reset\n");
+	printk(KERN_INFO "DMA EXIT: DMA memory reset.\n");
 
 	// Exit Device Module
 	platform_driver_unregister(&dma_driver);
@@ -437,10 +576,6 @@ static void __exit axi_dma_exit(void)
 	device_destroy(dma_class, MKDEV(MAJOR(dma_dev_id), 1));
 	class_destroy(dma_class);
 	unregister_chrdev_region(dma_dev_id, 1);
-	//misc_deregister(&dma_rx);
-	//misc_deregister(&dma_tx);
-	//pr_info("device unregistered\n");
-
 	dma_free_coherent(NULL, MAX_PKT_LEN, tx_vir_buffer, tx_phy_buffer);
 	printk(KERN_INFO "DMA EXIT: Exit device module finished\"%s\".\n", DEVICE_NAME);
 }

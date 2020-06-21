@@ -349,6 +349,7 @@ int dma_init(void __iomem *base_address)
 	u32 MM2S_DMACR_reg;
 	u32 S2MM_DMACR_reg;
 	u32 en_interrupt;
+	u32 Read_reg;
 
 	IOC_IRQ_EN = 1 << 12; // this is IOC_IrqEn bit in MM2S_DMACR register
 	ERR_IRQ_EN = 1 << 14; // this is Err_IrqEn bit in MM2S_DMACR register
@@ -364,7 +365,6 @@ int dma_init(void __iomem *base_address)
 	en_interrupt = MM2S_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in MM2S_DMACR
 	iowrite32(en_interrupt, base_address + 48);				 // writing to MM2S_DMACR register
 
-	u32 Read_reg;
 	Read_reg = ioread32(base_address + 48);
 	printk(KERN_INFO "DMA Init: Reset and interrupts set!\nS2MM_DMACR: 0x%x\n", (int)Read_reg);
 
@@ -375,7 +375,7 @@ u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt
 {
 	u32 MM2S_DMACR_reg;
 	u32 S2MM_DMACR_reg;
-
+	u32 Read_reg;
 	S2MM_DMACR_reg = ioread32(base_address + 48); // READ from S2MM_DMACR register
 	MM2S_DMACR_reg = ioread32(base_address);	  // READ from MM2S_DMACR register
 
@@ -389,9 +389,8 @@ u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt
 	iowrite32(max_pkt_len, base_address + 40 + 48); // Write into S2MM_LENGTH register. This is the length of a tranaction.
 	iowrite32(max_pkt_len, base_address + 40);		// Write into MM2S_LENGTH register. This is the length of a tranaction.
 
-	u32 Read_reg;
 	Read_reg = ioread32(base_address + 48);
-	printk(KERN_INFO "DMA Init: DMACR SA and LENGTH registers set!\nS2MM_DMACR: 0x%x	length: %ld\n", (int)Read_reg, max_pkt_len);
+	printk(KERN_INFO "DMA Init: DMACR SA and LENGTH registers set!\nS2MM_DMACR: 0x%x	length: %ld\n", (int)Read_reg, (int)max_pkt_len);
 	return 0;
 }
 

@@ -36,9 +36,9 @@ static int test_dma_open(struct inode *i, struct file *f);
 static int test_dma_close(struct inode *i, struct file *f);
 static ssize_t test_dma_read(struct file *f, char __user *buf, size_t len, loff_t *off);
 static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
-//static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s);
-//static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s);
-static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s);
+static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s);
+static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s);
+//static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s);
 static int __init test_dma_init(void);
 static void __exit test_dma_exit(void);
 static int test_dma_remove(struct platform_device *pdev);
@@ -295,7 +295,7 @@ static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s)
 		printk(KERN_ERR "MMAP failed for S2MM\n");
 		return ret;
 	}
-	printk(KERN_INFO "RX MMAP DONE, length: %d\n", length);
+	printk(KERN_INFO "RX MMAP DONE, length: %ld\n", length);
 
 	return 0;
 }
@@ -319,14 +319,14 @@ static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s)
 		printk(KERN_ERR "MMAP failed for MM2S\n");
 		return ret;
 	}
-	printk(KERN_INFO "TX MMAP DONE, length: %d\n", length);
+	printk(KERN_INFO "TX MMAP DONE, length: %ld\n", length);
 	return 0;
 }
-* /
-	/****************************************************/
-	// IMPLEMENTATION OF DMA related functions
 
-	static irqreturn_t dma_isr(int irq, void *dev_id)
+/****************************************************/
+// IMPLEMENTATION OF DMA related functions
+
+static irqreturn_t dma_isr(int irq, void *dev_id)
 {
 	u32 IrqStatus;
 	/* Read pending interrupts */
@@ -352,6 +352,7 @@ int dma_init(void __iomem *base_address)
 	u32 MM2S_DMACR_reg;
 	u32 S2MM_DMACR_reg;
 	u32 en_interrupt;
+	u32 Readx;
 
 	IOC_IRQ_EN = 1 << 12; // this is IOC_IrqEn bit in MM2S_DMACR register
 	ERR_IRQ_EN = 1 << 14; // this is Err_IrqEn bit in MM2S_DMACR register
@@ -367,7 +368,6 @@ int dma_init(void __iomem *base_address)
 	en_interrupt = MM2S_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in MM2S_DMACR
 	iowrite32(en_interrupt, base_address + 48);				 // writing to MM2S_DMACR register
 
-	u32 Read;
 	Read = ioread32(base_address + 48);
 	printk(KERN_INFO "DMA Init: Reset and interrupts set!\nS2MM_DMACR: 0x%x\n", (int)Read);
 
@@ -378,6 +378,7 @@ u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt
 {
 	u32 MM2S_DMACR_reg;
 	u32 S2MM_DMACR_reg;
+	u32 Readx;
 
 	S2MM_DMACR_reg = ioread32(base_address + 48); // READ from S2MM_DMACR register
 	MM2S_DMACR_reg = ioread32(base_address);	  // READ from MM2S_DMACR register
@@ -392,7 +393,7 @@ u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt
 	iowrite32(max_pkt_len, base_address + 40 + 48); // Write into S2MM_LENGTH register. This is the length of a tranaction.
 	iowrite32(max_pkt_len, base_address + 40);		// Write into MM2S_LENGTH register. This is the length of a tranaction.
 
-	Read = ioread32(base_address + 48);
+	Readx = ioread32(base_address + 48);
 	printk(KERN_INFO "DMA Init: DMACR SA and LENGTH registers set!\nS2MM_DMACR: 0x%x	length: 0x%x\n", (int)Read, (int)max_pkt_len);
 	return 0;
 }

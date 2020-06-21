@@ -91,7 +91,7 @@ int main(void)
 	}
 	fclose(fp);
 
-	for (i = 0; i < PACKAGE_LENGTH; i++)
+	for (i = 0; i < PACKAGE_LENGTH / 16; i++)
 	{
 		if (audio[i] != hardware_res[i])
 		{

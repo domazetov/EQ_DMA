@@ -156,7 +156,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 		goto error2;
 	}
 
-	if (request_irq(vp->irq_num, tx_dma_isr, 0, DEVICE_NAME, NULL))
+	if (request_irq(vp->irq_num, rx_dma_isr, 0, DEVICE_NAME, NULL))
 	{
 		printk(KERN_ERR "DMA Probe: Could not register IRQ %d\n", vp->irq_num);
 		return -EIO;
@@ -168,9 +168,9 @@ static int axi_dma_probe(struct platform_device *pdev)
 	}
 
 	/* INIT DMA */
-	//rx_dma_init(vp->base_addr);
+	rx_dma_init(vp->base_addr);
 	tx_dma_init(vp->base_addr);
-	//rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
+	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
 	tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr); // helper function, defined later
 
 	printk(KERN_NOTICE "DMA Probe: DMA platform driver registered\n");
@@ -275,7 +275,7 @@ static irqreturn_t rx_dma_isr(int irq, void *dev_id)
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
 	IrqStatus = ioread32(vp->base_addr + 4 + 48);
 	/*Send a transaction*/
-	rx_dma_simple_write(phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
+	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
 
 	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", (int)IrqStatus);
 	return IRQ_HANDLED;
@@ -357,7 +357,7 @@ u32 rx_dma_simple_write(dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *b
 	iowrite32(max_pkt_len, base_address + 40 + 48); // Write into S2MM_LENGTH register. This is the length of a tranaction.
 
 	S2MM_DMACR_reg = ioread32(base_address + 48);
-	printk(KERN_INFO "DMA Init: DMACR SA and LENGTH registers set!\nS2MM_DMACR: 0x%x	length: %d\n", (int)S2MM_DMACR_reg, (int)max_pkt_len);
+	printk(KERN_INFO "DMA Init: DMACR DA and LENGTH registers set!\nS2MM_DMACR: 0x%x	length: %d\n", (int)S2MM_DMACR_reg, (int)max_pkt_len);
 	return 0;
 }
 
@@ -486,7 +486,7 @@ static void __exit axi_dma_exit(void)
 	class_destroy(dma_class);
 	unregister_chrdev_region(dma_dev_id, 1);
 	dma_free_coherent(NULL, MAX_PKT_LEN, tx_vir_buffer, tx_phy_buffer);
-	printk(KERN_INFO "DMA EXIT: Exit device module finished\"%s\".\n", DEVICE_NAME);
+	printk(KERN_INFO "DMA EXIT: Exit device module finished \"%s\".\n", DEVICE_NAME);
 }
 
 module_init(axi_dma_init);

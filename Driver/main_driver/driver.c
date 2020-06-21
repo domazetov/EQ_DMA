@@ -175,7 +175,8 @@ static int axi_dma_probe(struct platform_device *pdev)
 		rx_dma_init(rx_vp->base_addr);
 		rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, rx_vp->base_addr); // helper function, defined later
 
-		printk(KERN_NOTICE "DMA PROBE: RX Test platform driver registered.\n");
+		printk(KERN_INFO "DMA PROBE: RX Test platform driver registered.\n");
+		channel++;
 		return 0; //ALL OK
 
 	error3:
@@ -239,8 +240,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 		tx_dma_init(tx_vp->base_addr);
 		tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, tx_vp->base_addr); // helper function, defined later
 
-		channel++;
-		printk(KERN_NOTICE "DMA PROBE: TX Test platform driver registered.\n");
+		printk(KERN_INFO "DMA PROBE: TX Test platform driver registered.\n");
 		return 0; //ALL OK
 
 	errortx3:
@@ -256,6 +256,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 		return -1;
 	}
 	printk(KERN_INFO "DMA PROBE: Done.\n");
+	return 0; //ALL OK
 }
 
 static int axi_dma_remove(struct platform_device *pdev)

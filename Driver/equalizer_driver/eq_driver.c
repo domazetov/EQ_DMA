@@ -35,35 +35,36 @@ static int __init eq_init(void);
 static void __exit eq_exit(void);
 static int eq_remove(struct platform_device *pdev);
 
-
 static char chToUpper(char ch);
-static unsigned long strToInt(const char* pStr, int len, int base);
+static unsigned long strToInt(const char *pStr, int len, int base);
 
 //*********************GLOBAL VARIABLES*************************************//
 static struct file_operations eq_fops =
-{
-	.owner = THIS_MODULE,
-	.open = eq_open,
-	.release = eq_close,
-	.read = eq_read,
-	.write = eq_write
-};
+	{
+		.owner = THIS_MODULE,
+		.open = eq_open,
+		.release = eq_close,
+		.read = eq_read,
+		.write = eq_write};
 static struct of_device_id eq_of_match[] = {
-	{ .compatible = "equalizer", },
-	{ /* end of list */ },
+	{
+		.compatible = "equalizer",
+	},
+	{/* end of list */},
 };
 
 static struct platform_driver eq_driver = {
 	.driver = {
 		.name = DRIVER_NAME,
 		.owner = THIS_MODULE,
-		.of_match_table	= eq_of_match,
+		.of_match_table = eq_of_match,
 	},
-	.probe		= eq_probe,
-	.remove	= eq_remove,
+	.probe = eq_probe,
+	.remove = eq_remove,
 };
 
-struct eq_info {
+struct eq_info
+{
 	unsigned long mem_start;
 	unsigned long mem_end;
 	void __iomem *base_addr;
@@ -89,12 +90,14 @@ static int eq_probe(struct platform_device *pdev)
 	printk(KERN_INFO "Probing\n");
 
 	r_mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	if (!r_mem) {
+	if (!r_mem)
+	{
 		printk(KERN_ALERT "invalid address\n");
 		return -ENODEV;
 	}
-	vp = (struct eq_info *) kmalloc(sizeof(struct eq_info), GFP_KERNEL);
-	if (!vp) {
+	vp = (struct eq_info *)kmalloc(sizeof(struct eq_info), GFP_KERNEL);
+	if (!vp)
+	{
 		printk(KERN_ALERT "Cound not allocate eq device\n");
 		return -ENOMEM;
 	}
@@ -102,14 +105,14 @@ static int eq_probe(struct platform_device *pdev)
 	vp->mem_start = r_mem->start;
 	vp->mem_end = r_mem->end;
 
-
-	if (!request_mem_region(vp->mem_start,vp->mem_end - vp->mem_start + 1, DRIVER_NAME))
+	if (!request_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1, DRIVER_NAME))
 	{
-		printk(KERN_ALERT "Couldn't lock memory region at %p\n",(void *)vp->mem_start);
+		printk(KERN_ALERT "Couldn't lock memory region at %p\n", (void *)vp->mem_start);
 		rc = -EBUSY;
 		goto error1;
 	}
-	else {
+	else
+	{
 		printk(KERN_INFO "eq_init: Successfully allocated memory region for equalizer\n");
 	}
 	/* 
@@ -117,7 +120,8 @@ static int eq_probe(struct platform_device *pdev)
 	 */
 
 	vp->base_addr = ioremap(vp->mem_start, vp->mem_end - vp->mem_start + 1);
-	if (!vp->base_addr) {
+	if (!vp->base_addr)
+	{
 		printk(KERN_ALERT "equalizer: Could not allocate iomem\n");
 		rc = -EIO;
 		goto error2;
@@ -128,7 +132,6 @@ error2:
 	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 error1:
 	return rc;
-
 }
 
 static int eq_remove(struct platform_device *pdev)
@@ -159,20 +162,20 @@ static ssize_t eq_read(struct file *f, char __user *buf, size_t len, loff_t *off
 }
 static ssize_t eq_write(struct file *f, const char __user *buf, size_t count, loff_t *off)
 {
-	
+
 	char buffer[count];
-	char *lp='\0';
-	char *rp='\0';
+	char *lp = '\0';
+	char *rp = '\0';
 	int i = 0;
 	unsigned int x, eq_paramater;
 
-    i = copy_from_user(buffer, buf, count);
+	i = copy_from_user(buffer, buf, count);
 	buffer[count - 1] = '\0';
 
-	//extract position on x axis 
+	//extract position on x axis
 	lp = buffer;
-	rp = strchr(lp,',');
-	if(!rp)
+	rp = strchr(lp, ',');
+	if (!rp)
 	{
 		printk("Invalid input, expected format: x,eq_parameter\n");
 		return count;
@@ -180,40 +183,39 @@ static ssize_t eq_write(struct file *f, const char __user *buf, size_t count, lo
 	*rp = '\0';
 	rp++;
 
-	if(lp[0]=='0' && lp[1]=='x')
+	if (lp[0] == '0' && lp[1] == 'x')
 	{
-		lp=lp+2;
+		lp = lp + 2;
 		x = strToInt(lp, strlen(lp), 16);
 	}
 	else
 		x = strToInt(lp, strlen(lp), 10);
 
 	lp = rp;
-	if(!lp)
+	if (!lp)
 	{
 		printk("Invalid input, expected format: x,eq_parameter\n");
 		return count;
 	}
-	if(lp[0]=='0' && lp[1]=='x')
+	if (lp[0] == '0' && lp[1] == 'x')
 	{
-		lp=lp+2;
+		lp = lp + 2;
 		eq_paramater = strToInt(lp, strlen(lp), 16);
 	}
 	else
 		eq_paramater = strToInt(lp, strlen(lp), 10);
 
-	
 	if (x < 0 || x > 18) // ADDRESS
 	{
 		printk("position of eq_paramater is out of bounds\n");
 		return count;
 	}
 
-	printk("ADDR %d V %d \n",x,eq_paramater);
+	printk("ADDR %d V %d \n", x, eq_paramater);
 
-	iowrite32(eq_paramater, vp->base_addr+x);
+	iowrite32(eq_paramater, vp->base_addr + x);
 
-	printk("Sucessfull write \n");
+	printk("Successful write!\n");
 	return count;
 }
 
@@ -221,32 +223,32 @@ static ssize_t eq_write(struct file *f, const char __user *buf, size_t count, lo
 // HELPER FUNCTIONS (STRING TO INTEGER)
 static char chToUpper(char ch)
 {
-	if((ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'))
+	if ((ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'))
 	{
 		return ch;
 	}
 	else
 	{
-		return ch - ('a'-'A');
+		return ch - ('a' - 'A');
 	}
 }
 
-static unsigned long strToInt(const char* pStr, int len, int base)
+static unsigned long strToInt(const char *pStr, int len, int base)
 {
 	//                      0,1,2,3,4,5,6,7,8,9,:,;,<,=,>,?,@,A ,B ,C ,D ,E ,F
-	static const int v[] = {0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0,0,10,11,12,13,14,15};
-	int i   = 0;
+	static const int v[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 13, 14, 15};
+	int i = 0;
 	unsigned long val = 0;
 	int dec = 1;
 	int idx = 0;
 
-	for(i = len; i > 0; i--)
+	for (i = len; i > 0; i--)
 	{
-		idx = chToUpper(pStr[i-1]) - '0';
+		idx = chToUpper(pStr[i - 1]) - '0';
 
-		if(idx > sizeof(v)/sizeof(int))
+		if (idx > sizeof(v) / sizeof(int))
 		{
-			printk("strToInt: illegal character %c\n", pStr[i-1]);
+			printk("strToInt: illegal character %c\n", pStr[i - 1]);
 			continue;
 		}
 
@@ -256,7 +258,6 @@ static unsigned long strToInt(const char* pStr, int len, int base)
 
 	return val;
 }
-
 
 //***************************************************//
 // INIT AND EXIT FUNCTIONS OF THE DRIVER
@@ -281,7 +282,7 @@ static int __init eq_init(void)
 		goto fail_0;
 	}
 	printk(KERN_INFO "Succ class chardev1 create!.\n");
-	if (device_create(cl, NULL, MKDEV(MAJOR(first),0), NULL, "eq") == NULL)
+	if (device_create(cl, NULL, MKDEV(MAJOR(first), 0), NULL, "eq") == NULL)
 	{
 		goto fail_1;
 	}
@@ -299,21 +300,20 @@ static int __init eq_init(void)
 	return platform_driver_register(&eq_driver);
 
 fail_2:
-	device_destroy(cl, MKDEV(MAJOR(first),0));
+	device_destroy(cl, MKDEV(MAJOR(first), 0));
 fail_1:
 	class_destroy(cl);
 fail_0:
 	unregister_chrdev_region(first, 1);
 	return -1;
+}
 
-} 
-
-static void __exit eq_exit(void)  		
+static void __exit eq_exit(void)
 {
 
 	platform_driver_unregister(&eq_driver);
 	cdev_del(&c_dev);
-	device_destroy(cl, MKDEV(MAJOR(first),0));
+	device_destroy(cl, MKDEV(MAJOR(first), 0));
 	class_destroy(cl);
 	unregister_chrdev_region(first, 1);
 	printk(KERN_INFO "eq_exit: Exit Device Module \"%s\".\n", DEVICE_NAME);
@@ -322,7 +322,7 @@ static void __exit eq_exit(void)
 module_init(eq_init);
 module_exit(eq_exit);
 
-MODULE_AUTHOR ("FTN");
+MODULE_AUTHOR("FTN");
 MODULE_DESCRIPTION("Test Driver for equalizer output.");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("custom:equalizer");

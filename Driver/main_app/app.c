@@ -8,7 +8,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-#define PACKAGE_LENGTH 1024 
+#define PACKAGE_LENGTH 1024
 #define NUMBER_OF_PACKAGES 215
 #define NUMBER_OF_AMPLIFICATIONS 10
 #define NUMBER_OF_BOUNDARIES 9
@@ -27,10 +27,10 @@ int main(void)
 	printf("Equalizer started!\n");
 	for (i = 0; i < (NUMBER_OF_AMPLIFICATIONS + NUMBER_OF_BOUNDARIES); i++)
 	{
-		fp = fopen("/dev/equalizer", "w");
+		fp = fopen("/dev/eq", "w");
 		if (fp == NULL)
 		{
-			printf("Cannot open /dev/equalizer for write\n");
+			printf("Cannot open /dev/eq for write\n");
 			return -1;
 		}
 		if (i < NUMBER_OF_AMPLIFICATIONS)
@@ -84,13 +84,12 @@ int main(void)
 
 	close(tx_proxy_fd);
 	close(rx_proxy_fd);
-		
+
 	for (i = 0; i < PACKAGE_LENGTH; i++)
 	{
 		fprintf(fp, "0x%x\n", hardware_res[i]);
 	}
 	fclose(fp);
-
 
 	for (i = 0; i < PACKAGE_LENGTH; i++)
 	{
@@ -99,7 +98,6 @@ int main(void)
 			printf("Error at No%d: Input: 0x%x Output: 0x%x\n", i, audio[i], hardware_res[i]);
 		}
 	}
-	
 
 	printf("Equalizer completed!\n");
 	return 0;

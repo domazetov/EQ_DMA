@@ -1,4 +1,5 @@
 project_1
+DMATest_DriverOLD
 DMA-Proxy
 compatible.png
 vezba12
@@ -19,3 +20,6 @@ app
 *.ko
 *.d
 output.txt
+app_dma_probeOLD
+app_equalizer_probeOLD
+dma_driverOLD

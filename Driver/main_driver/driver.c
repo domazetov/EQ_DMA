@@ -357,7 +357,7 @@ static int __init axi_dma_init(void)
 	dma_device = device_create(dma_class, NULL, MKDEV(MAJOR(dma_dev_id), MINOR(dma_dev_id)), NULL, "dma_rx");
 	if (dma_device == NULL)
 	{
-		goto fail_1:;
+		goto fail_1;
 	}
 
 	dma_device = device_create(dma_class, NULL, MKDEV(MAJOR(dma_dev_id), MINOR(dma_dev_id) + 1), NULL, "dma_tx");

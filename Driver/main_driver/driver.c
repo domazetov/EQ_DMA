@@ -41,11 +41,11 @@ static int __init axi_dma_init(void);
 static void __exit axi_dma_exit(void);
 static int axi_dma_remove(struct platform_device *pdev);
 
-static irqreturn_t rx_dma_isr(int irq, void *dev_id);
+//static irqreturn_t rx_dma_isr(int irq, void *dev_id);
 int rx_dma_init(void __iomem *base_address);
 u32 rx_dma_simple_write(dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
 
-static irqreturn_t tx_dma_isr(int irq, void *dev_id);
+//static irqreturn_t tx_dma_isr(int irq, void *dev_id);
 int tx_dma_init(void __iomem *base_address);
 u32 tx_dma_simple_write(dma_addr_t TxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
 
@@ -269,12 +269,12 @@ static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 static irqreturn_t rx_dma_isr(int irq, void *dev_id)
 {
 	u32 IrqStatus;
-	/* Read pending interrupts */
+	// Read pending interrupts
 IrqStatus = ioread32(vp->base_addr + 4 + 48);			   //read irq status from S2MM_DMASR register
 iowrite32(IrqStatus | 0x00007000, vp->base_addr + 4 + 48); //clear irq status in S2MM_DMASR register
 //(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
 IrqStatus = ioread32(vp->base_addr + 4 + 48);
-/*Send a transaction*/
+//Send a transaction
 rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
 
 printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", (int)IrqStatus);
@@ -284,19 +284,19 @@ return IRQ_HANDLED;
 static irqreturn_t tx_dma_isr(int irq, void *dev_id)
 {
 	u32 IrqStatus;
-	/* Read pending interrupts */
+	//Read pending interrupts
 	IrqStatus = ioread32(vp->base_addr + 4);			  //read irq status from MM2S_DMASR register
 	iowrite32(IrqStatus | 0x00007000, vp->base_addr + 4); //clear irq status in MM2S_DMASR register
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
 	IrqStatus = ioread32(vp->base_addr + 4);
-	/*Send a transaction*/
+	//Send a transaction
 	tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
 
 	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", (int)IrqStatus);
 	return IRQ_HANDLED;
 }
-* /
-	int rx_dma_init(void __iomem *base_address)
+*/
+int rx_dma_init(void __iomem *base_address)
 {
 	u32 reset = 0x00000004;
 	//u32 IOC_IRQ_EN;

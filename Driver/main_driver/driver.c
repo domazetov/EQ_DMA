@@ -28,7 +28,7 @@ MODULE_ALIAS("custom:dma controller");
 
 #define DEVICE_NAME "axi_dma"
 #define DRIVER_NAME "dma_driver"
-#define MAX_PKT_LEN 1024 * 4
+#define MAX_PKT_LEN (1024 * 4)
 
 //*******************FUNCTION PROTOTYPES************************************
 static int axi_dma_probe(struct platform_device *pdev);
@@ -153,7 +153,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 
 		// Get irq num
 		rx_vp->irq_num = platform_get_irq(pdev, 0);
-		if (!vp->irq_num)
+		if (!rx_vp->irq_num)
 		{
 			printk(KERN_ERR "DMA PROBE: Could not get IRQ resource.\n");
 			rc = -ENODEV;
@@ -203,7 +203,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 		{
 			printk(KERN_ALERT "DMA PROBE: Could not lock memory region at %p.\n", (void *)tx_vp->mem_start);
 			rc = -EBUSY;
-			goto error1;
+			goto errortx1;
 		}
 		// Remap phisical to virtual adresses
 
@@ -212,7 +212,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 		{
 			printk(KERN_ALERT "DMA PROBE: Could not allocate memory for remapping.\n");
 			rc = -EIO;
-			goto error2;
+			goto errortx2;
 		}
 
 		// Get irq num
@@ -221,14 +221,14 @@ static int axi_dma_probe(struct platform_device *pdev)
 		{
 			printk(KERN_ERR "DMA PROBE: Could not get IRQ resource.\n");
 			rc = -ENODEV;
-			goto error2;
+			goto errortx2;
 		}
 
 		if (request_irq(tx_vp->irq_num, tx_dma_isr, 0, DEVICE_NAME, NULL))
 		{
 			printk(KERN_ERR "DMA PROBE: Could not register IRQ %d.\n", tx_vp->irq_num);
 			return -EIO;
-			goto error3;
+			goto errortx3;
 		}
 		else
 		{
@@ -237,18 +237,18 @@ static int axi_dma_probe(struct platform_device *pdev)
 
 		/* INIT DMA */
 		tx_dma_init(tx_vp->base_addr);
-		tx_dma_simple_write(tx_phy_buffer MAX_PKT_LEN, tx_vp->base_addr); // helper function, defined later
+		tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, tx_vp->base_addr); // helper function, defined later
 
 		channel++;
 		printk(KERN_NOTICE "DMA PROBE: TX Test platform driver registered.\n");
 		return 0; //ALL OK
 
-	error3:
+	errortx3:
 		iounmap(tx_vp->base_addr);
-	error2:
+	errortx2:
 		release_mem_region(tx_vp->mem_start, tx_vp->mem_end - tx_vp->mem_start + 1);
 		kfree(tx_vp);
-	error1:
+	errortx1:
 		return rc;
 		break;
 	default:
@@ -285,7 +285,7 @@ static int axi_dma_remove(struct platform_device *pdev)
 		channel--;
 		break;
 	default:
-		printk(KERN_INFO "DMA Probe: Wrong Channel.\n")
+		printk(KERN_INFO "DMA Probe: Wrong Channel.\n");
 	}
 	printk(KERN_INFO "DMA PROBE: Probe removed.\n");
 	return 0;
@@ -366,9 +366,9 @@ static irqreturn_t rx_dma_isr(int irq, void *dev_id)
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
 	IrqStatus = ioread32(rx_vp->base_addr + 4 + 48);
 	/*Send a transaction*/
-	dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, rx_vp->base_addr); //My function that starts a DMA transaction
+	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, rx_vp->base_addr); //My function that starts a DMA transaction
 
-	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", int(IrqStatus));
+	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", (int)IrqStatus);
 	return IRQ_HANDLED;
 }
 
@@ -381,9 +381,9 @@ static irqreturn_t tx_dma_isr(int irq, void *dev_id)
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
 	IrqStatus = ioread32(tx_vp->base_addr + 4);
 	/*Send a transaction*/
-	dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, tx_vp->base_addr); //My function that starts a DMA transaction
+	tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, tx_vp->base_addr); //My function that starts a DMA transaction
 
-	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", int(IrqStatus));
+	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", (int)IrqStatus);
 	return IRQ_HANDLED;
 }
 

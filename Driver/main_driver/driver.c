@@ -315,7 +315,7 @@ int rx_dma_init(void __iomem *base_address)
 	//iowrite32(en_interrupt, base_address + 48);				 // writing to S2MM_DMACR register
 
 	S2MM_DMACR_reg = ioread32(base_address + 48);
-	printk(KERN_INFO "DMA Init: Reset and interrupts set!\nS2MM_DMACR: 0x%x\n", (int)S2MM_DMACR_reg);
+	printk(KERN_INFO "DMA Init: Reset and interrupts set!\nS2MM_DMACR: 0x%x\nBase Address: 0x%x\n", (int)S2MM_DMACR_reg, (int)base_address + 48);
 
 	return 0;
 }
@@ -339,7 +339,7 @@ int tx_dma_init(void __iomem *base_address)
 	//iowrite32(en_interrupt, base_address);					 // writing to MM2S_DMACR register
 
 	MM2S_DMACR_reg = ioread32(base_address);
-	printk(KERN_INFO "DMA Init: Reset and interrupts set!\nMM2S_DMACR: 0x%x\n", (int)MM2S_DMACR_reg);
+	printk(KERN_INFO "DMA Init: Reset and interrupts set!\nMM2S_DMACR: 0x%x\nBase Address: 0x%x\n", (int)MM2S_DMACR_reg, (int)base_address);
 
 	return 0;
 }

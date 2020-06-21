@@ -105,7 +105,6 @@ dma_addr_t rx_phy_buffer;
 u32 *rx_vir_buffer;
 //***************************************************************************
 // PROBE AND REMOVE
-int channel = 0;
 
 static int axi_dma_probe(struct platform_device *pdev)
 {
@@ -120,146 +119,72 @@ static int axi_dma_probe(struct platform_device *pdev)
 		printk(KERN_ALERT "DMA PROBE: Failed to get reg resource.\n");
 		return -ENODEV;
 	}
-	switch (channel)
+
+	// Get memory for structure axi_dma_info
+	rx_vp = (struct axi_dma_info *)kmalloc(sizeof(struct axi_dma_info), GFP_KERNEL);
+	if (!rx_vp)
 	{
-	case 0:
-		// Get memory for structure axi_dma_info
-		rx_vp = (struct axi_dma_info *)kmalloc(sizeof(struct axi_dma_info), GFP_KERNEL);
-		if (!rx_vp)
-		{
-			printk(KERN_ALERT "DMA PROBE: Could not allocate memory for structure axi_dma_info.\n");
-			return -ENOMEM;
-		}
-		// Put phisical adresses in timer_info structure
-		rx_vp->mem_start = r_mem->start;
-		rx_vp->mem_end = r_mem->end;
-
-		// Reserve that memory space for this driver
-		if (!request_mem_region(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1, DRIVER_NAME))
-		{
-			printk(KERN_ALERT "DMA PROBE: Could not lock memory region at %p.\n", (void *)rx_vp->mem_start);
-			rc = -EBUSY;
-			goto error1;
-		}
-		// Remap phisical to virtual adresses
-
-		rx_vp->base_addr = ioremap(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1);
-		if (!rx_vp->base_addr)
-		{
-			printk(KERN_ALERT "DMA PROBE: Could not allocate memory for remapping.\n");
-			rc = -EIO;
-			goto error2;
-		}
-
-		// Get irq num
-		rx_vp->irq_num = platform_get_irq(pdev, 0);
-		if (!rx_vp->irq_num)
-		{
-			printk(KERN_ERR "DMA PROBE: Could not get IRQ resource.\n");
-			rc = -ENODEV;
-			goto error2;
-		}
-
-		if (request_irq(rx_vp->irq_num, rx_dma_isr, 0, DEVICE_NAME, NULL))
-		{
-			printk(KERN_ERR "DMA PROBE: Could not register IRQ %d.\n", rx_vp->irq_num);
-			return -EIO;
-			goto error3;
-		}
-		else
-		{
-			printk(KERN_INFO "DMA PROBE: Registered IRQ %d.\n", rx_vp->irq_num);
-		}
-
-		/* INIT DMA */
-		rx_dma_init(rx_vp->base_addr);
-		rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, rx_vp->base_addr); // helper function, defined later
-
-		printk(KERN_INFO "DMA PROBE: RX Test platform driver registered.\n");
-		channel++;
-		//return 0; //ALL OK
-
-	error3:
-		iounmap(rx_vp->base_addr);
-		break;
-	error2:
-		release_mem_region(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1);
-		kfree(rx_vp);
-		break;
-	error1:
-		return rc;
-		break;
-	case 1:
-		printk(KERN_INFO "D1.\n");
-		// Get memory for structure axi_dma_info
-		tx_vp = (struct axi_dma_info *)kmalloc(sizeof(struct axi_dma_info), GFP_KERNEL);
-		if (!tx_vp)
-		{
-			printk(KERN_ALERT "DMA PROBE: Could not allocate memory for structure axi_dma_info.\n");
-			return -ENOMEM;
-		}
-		printk(KERN_INFO "D2.\n");
-		// Put phisical adresses in timer_info structure
-		tx_vp->mem_start = r_mem->start;
-		tx_vp->mem_end = r_mem->end;
-		printk(KERN_INFO "D3.\n");
-		// Reserve that memory space for this driver
-		if (!request_mem_region(tx_vp->mem_start, tx_vp->mem_end - tx_vp->mem_start + 1, DRIVER_NAME))
-		{
-			printk(KERN_ALERT "DMA PROBE: Could not lock memory region at %p.\n", (void *)tx_vp->mem_start);
-			rc = -EBUSY;
-			goto errortx1;
-		}
-		printk(KERN_INFO "D4.\n");
-		// Remap phisical to virtual adresses
-
-		tx_vp->base_addr = ioremap(tx_vp->mem_start, tx_vp->mem_end - tx_vp->mem_start + 1);
-		if (!tx_vp->base_addr)
-		{
-			printk(KERN_ALERT "DMA PROBE: Could not allocate memory for remapping.\n");
-			rc = -EIO;
-			goto errortx2;
-		}
-		printk(KERN_INFO "D5.\n");
-		// Get irq num
-		tx_vp->irq_num = platform_get_irq(pdev, 0);
-		if (!tx_vp->irq_num)
-		{
-			printk(KERN_ERR "DMA PROBE: Could not get IRQ resource.\n");
-			rc = -ENODEV;
-			goto errortx2;
-		}
-		printk(KERN_INFO "D6.\n");
-		if (request_irq(tx_vp->irq_num, tx_dma_isr, 0, DEVICE_NAME, NULL))
-		{
-			printk(KERN_ERR "DMA PROBE: Could not register IRQ %d.\n", tx_vp->irq_num);
-			return -EIO;
-			goto errortx3;
-		}
-		else
-		{
-			printk(KERN_INFO "DMA PROBE: Registered IRQ %d.\n", tx_vp->irq_num);
-		}
-		printk(KERN_INFO "D7.\n");
-		/* INIT DMA */
-		tx_dma_init(tx_vp->base_addr);
-		tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, tx_vp->base_addr); // helper function, defined later
-		printk(KERN_INFO "D8.\n");
-		printk(KERN_INFO "DMA PROBE: TX Test platform driver registered.\n");
-		//return 0; //ALL OK
-
-	errortx3:
-		iounmap(tx_vp->base_addr);
-	errortx2:
-		release_mem_region(tx_vp->mem_start, tx_vp->mem_end - tx_vp->mem_start + 1);
-		kfree(tx_vp);
-	errortx1:
-		return rc;
-		break;
-	default:
-		printk(KERN_INFO "DMA PROBE: Wrong channel.\n");
-		return -1;
+		printk(KERN_ALERT "DMA PROBE: Could not allocate memory for structure axi_dma_info.\n");
+		return -ENOMEM;
 	}
+	// Put phisical adresses in timer_info structure
+	rx_vp->mem_start = r_mem->start;
+	rx_vp->mem_end = r_mem->end;
+
+	// Reserve that memory space for this driver
+	if (!request_mem_region(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1, DRIVER_NAME))
+	{
+		printk(KERN_ALERT "DMA PROBE: Could not lock memory region at %p.\n", (void *)rx_vp->mem_start);
+		rc = -EBUSY;
+		goto error1;
+	}
+	// Remap phisical to virtual adresses
+
+	rx_vp->base_addr = ioremap(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1);
+	if (!rx_vp->base_addr)
+	{
+		printk(KERN_ALERT "DMA PROBE: Could not allocate memory for remapping.\n");
+		rc = -EIO;
+		goto error2;
+	}
+
+	// Get irq num
+	rx_vp->irq_num = platform_get_irq(pdev, 0);
+	if (!rx_vp->irq_num)
+	{
+		printk(KERN_ERR "DMA PROBE: Could not get IRQ resource.\n");
+		rc = -ENODEV;
+		goto error2;
+	}
+
+	if (request_irq(rx_vp->irq_num, rx_dma_isr, 0, DEVICE_NAME, NULL))
+	{
+		printk(KERN_ERR "DMA PROBE: Could not register IRQ %d.\n", rx_vp->irq_num);
+		return -EIO;
+		goto error3;
+	}
+	else
+	{
+		printk(KERN_INFO "DMA PROBE: Registered IRQ %d.\n", rx_vp->irq_num);
+	}
+
+	/* INIT DMA */
+	rx_dma_init(rx_vp->base_addr);
+	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, rx_vp->base_addr); // helper function, defined later
+
+	printk(KERN_INFO "DMA PROBE: RX Test platform driver registered.\n");
+	//return 0; //ALL OK
+
+error3:
+	printk(KERN_INFO "E3.\n");
+	iounmap(rx_vp->base_addr);
+error2:
+	printk(KERN_INFO "E2.\n");
+	release_mem_region(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1);
+	kfree(rx_vp);
+error1:
+	printk(KERN_INFO "E1.\n");
+
 	printk(KERN_INFO "DMA PROBE: Done.\n");
 	return 0; //ALL OK
 }
@@ -269,39 +194,19 @@ static int axi_dma_remove(struct platform_device *pdev)
 	u32 reset = 0x00000004;
 
 	printk(KERN_INFO "DMA PROBE: Resseting.\n");
-	switch (channel)
-	{
-	case 1:
-		printk(KERN_INFO "DR1.\n");
-		iowrite32(reset, rx_vp->base_addr + 48); // writing to S2MM_DMACR register. Seting reset bit (3. bit)
-		printk(KERN_INFO "DR2.\n");
-		free_irq(rx_vp->irq_num, NULL);
-		printk(KERN_INFO "DR3.\n");
-		iounmap(rx_vp->base_addr);
-		printk(KERN_INFO "DR4.\n");
-		release_mem_region(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1);
-		printk(KERN_INFO "DR5.\n");
-		kfree(rx_vp);
-		printk(KERN_INFO "DMA PROBE: RX DMA removed.\n");
-		channel--;
-		//break;
-	case 0:
-		printk(KERN_INFO "DR6.\n");
-		iowrite32(reset, tx_vp->base_addr); // writing to MM2S_DMACR register. Seting reset bit (3. bit)
-		printk(KERN_INFO "DR7.\n");
-		free_irq(tx_vp->irq_num, NULL);
-		printk(KERN_INFO "DR8.\n");
-		iounmap(tx_vp->base_addr);
-		printk(KERN_INFO "DR9.\n");
-		release_mem_region(tx_vp->mem_start, tx_vp->mem_end - tx_vp->mem_start + 1);
-		printk(KERN_INFO "DR10.\n");
-		kfree(tx_vp);
 
-		printk(KERN_INFO "DMA PROBE: RX DMA removed.\n");
-		//break;
-	default:
-		printk(KERN_INFO "DMA Probe: Wrong Channel.\n");
-	}
+	printk(KERN_INFO "DR1.\n");
+	iowrite32(reset, rx_vp->base_addr + 48); // writing to S2MM_DMACR register. Seting reset bit (3. bit)
+	printk(KERN_INFO "DR2.\n");
+	free_irq(rx_vp->irq_num, NULL);
+	printk(KERN_INFO "DR3.\n");
+	iounmap(rx_vp->base_addr);
+	printk(KERN_INFO "DR4.\n");
+	release_mem_region(rx_vp->mem_start, rx_vp->mem_end - rx_vp->mem_start + 1);
+	printk(KERN_INFO "DR5.\n");
+	kfree(rx_vp);
+	printk(KERN_INFO "DMA PROBE: RX DMA removed.\n");
+
 	printk(KERN_INFO "DMA PROBE: Probe removed.\n");
 	return 0;
 }

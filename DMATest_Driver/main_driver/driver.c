@@ -56,12 +56,14 @@ struct test_dma_info
 	int irq_num;
 };
 
-static struct cdev *dma_cdev;
+static struct cdev *dma_cdev[2];
 static dev_t dma_dev_id;
 static struct class *dma_class;
 static struct device *dma_device;
 
 static struct test_dma_info *vp = NULL;
+
+/*
 static struct file_operations dma_fops =
 	{
 		.owner = THIS_MODULE,
@@ -70,7 +72,8 @@ static struct file_operations dma_fops =
 		.read = test_dma_read,
 		.write = test_dma_write,
 		.mmap = dma_mmap};
-/*
+*/
+
 static struct file_operations rx_fops =
 	{
 		.owner = THIS_MODULE,
@@ -88,7 +91,7 @@ static struct file_operations tx_fops =
 		.read = test_dma_read,
 		.write = test_dma_write,
 		.mmap = tx_mmap};
-
+/*
 static struct miscdevice dma_rx = {
 	.minor = MISC_DYNAMIC_MINOR,
 	.name = "dma_rx",
@@ -100,6 +103,12 @@ static struct miscdevice dma_tx = {
 	.fops = &tx_fops};
 */
 static struct of_device_id test_dma_of_match[] = {
+	{
+		.compatible = "axi_dma_mm2s",
+	},
+	{
+		.compatible = "axi_dma_s2mm",
+	},
 	{
 		.compatible = "axi_dma",
 	},
@@ -241,7 +250,7 @@ static ssize_t test_dma_write(struct file *f, const char __user *buf, size_t len
 	printk("DMA write\n");
 	return 0;
 }
-
+/*
 static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 {
 	int ret = 0;
@@ -261,10 +270,12 @@ static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 		printk(KERN_ERR "memory map failed\n");
 		return ret;
 	}
+
+	printk(KERN_INFO "MMAP DONE, length: %ld\n", length);
 	return 0;
 }
+*/
 
-/*
 static ssize_t rx_mmap(struct file *f, struct vm_area_struct *vma_s)
 {
 	int ret = 0;
@@ -311,11 +322,11 @@ static ssize_t tx_mmap(struct file *f, struct vm_area_struct *vma_s)
 	printk(KERN_INFO "TX MMAP DONE, length: %d\n", length);
 	return 0;
 }
-*/
-/****************************************************/
-// IMPLEMENTATION OF DMA related functions
+* /
+	/****************************************************/
+	// IMPLEMENTATION OF DMA related functions
 
-static irqreturn_t dma_isr(int irq, void *dev_id)
+	static irqreturn_t dma_isr(int irq, void *dev_id)
 {
 	u32 IrqStatus;
 	/* Read pending interrupts */
@@ -356,7 +367,10 @@ int dma_init(void __iomem *base_address)
 	en_interrupt = MM2S_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in MM2S_DMACR
 	iowrite32(en_interrupt, base_address + 48);				 // writing to MM2S_DMACR register
 
-	printk(KERN_INFO "DMA Init: Reset and interrupts set!\n");
+	u32 Read;
+	Read = ioread32(base_address + 48);
+	printk(KERN_INFO "DMA Init: Reset and interrupts set!\nS2MM_DMACR: 0x%x\n", (int)Read);
+
 	return 0;
 }
 
@@ -371,14 +385,15 @@ u32 dma_simple_write(dma_addr_t TxBufferPtr, dma_addr_t RxBufferPtr, u32 max_pkt
 	iowrite32(0x1 | S2MM_DMACR_reg, base_address + 48); // set RS bit in S2MM_DMACR register (this bit starts the DMA)
 	iowrite32(0x1 | MM2S_DMACR_reg, base_address);		// set RS bit in MM2S_DMACR register (this bit starts the DMA)
 
-	iowrite32((u32)TxBufferPtr, base_address + 24 + 48); // Write into S2MM_SA register the value of RxBufferPtr.
+	iowrite32((u32)RxBufferPtr, base_address + 24 + 48); // Write into S2MM_SA register the value of RxBufferPtr.
 	iowrite32((u32)TxBufferPtr, base_address + 24);		 // Write into MM2S_SA register the value of TxBufferPtr.
 	// With this, the DMA knows from where to start.
 
 	iowrite32(max_pkt_len, base_address + 40 + 48); // Write into S2MM_LENGTH register. This is the length of a tranaction.
 	iowrite32(max_pkt_len, base_address + 40);		// Write into MM2S_LENGTH register. This is the length of a tranaction.
 
-	printk(KERN_INFO "DMA Init: DMACR SA and LENGTH registers set!\n");
+	Read = ioread32(base_address + 48);
+	printk(KERN_INFO "DMA Init: DMACR SA and LENGTH registers set!\nS2MM_DMACR: 0x%x	length: 0x%x\n", (int)Read, (int)max_pkt_len);
 	return 0;
 }
 
@@ -425,11 +440,29 @@ static int __init test_dma_init(void)
 		goto fail_0;
 	}
 	printk(KERN_INFO "DMA INIT: Successful class chardevs create!\n");
-
+	/*
 	dma_cdev = cdev_alloc();
 	dma_cdev->ops = &dma_fops;
 	dma_cdev->owner = THIS_MODULE;
 	ret = cdev_add(dma_cdev, dma_dev_id, 2);
+	if (ret)
+	{
+		printk(KERN_ERR "DMA INIT: Failed to add cdev\n");
+		goto fail_1;
+	}
+	*/
+	cdev_init(&dma_cdev[0], &rx_fops);
+
+	ret = cdev_add(dma_cdev[0], dma_dev_id, 1);
+	if (ret)
+	{
+		printk(KERN_ERR "DMA INIT: Failed to add cdev\n");
+		goto fail_1;
+	}
+
+	cdev_init(&dma_cdev[1], &tx_fops);
+
+	ret = cdev_add(dma_cdev[1], dma_dev_id, 1);
 	if (ret)
 	{
 		printk(KERN_ERR "DMA INIT: Failed to add cdev\n");
@@ -450,7 +483,7 @@ static int __init test_dma_init(void)
 	printk(KERN_INFO "DMA INIT: Device created\n");
 
 	//printk(KERN_INFO "DMA INIT: Module init done\n");
-	/*
+
 	rx_vir_buffer = dma_alloc_coherent(NULL, MAX_PKT_LEN, &rx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!rx_vir_buffer)
 	{
@@ -461,7 +494,7 @@ static int __init test_dma_init(void)
 		printk("DMA INIT: Successfully allocated memory for dma RX buffer\n");
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 		rx_vir_buffer[i] = 0x00000000;
-*/
+
 	tx_vir_buffer = dma_alloc_coherent(NULL, MAX_PKT_LEN, &tx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!tx_vir_buffer)
 	{

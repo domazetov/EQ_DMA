@@ -87,18 +87,18 @@ static int eq_probe(struct platform_device *pdev)
 	struct resource *r_mem;
 	int rc = 0;
 
-	printk(KERN_INFO "Probing\n");
+	printk(KERN_INFO "EQ: Probing.\n");
 
 	r_mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!r_mem)
 	{
-		printk(KERN_ALERT "invalid address\n");
+		printk(KERN_ALERT "EQ: Invalid address.\n");
 		return -ENODEV;
 	}
 	vp = (struct eq_info *)kmalloc(sizeof(struct eq_info), GFP_KERNEL);
 	if (!vp)
 	{
-		printk(KERN_ALERT "Cound not allocate eq device\n");
+		printk(KERN_ALERT "EQ: Cound not allocate eq device\.n");
 		return -ENOMEM;
 	}
 
@@ -107,13 +107,13 @@ static int eq_probe(struct platform_device *pdev)
 
 	if (!request_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1, DRIVER_NAME))
 	{
-		printk(KERN_ALERT "Couldn't lock memory region at %p\n", (void *)vp->mem_start);
+		printk(KERN_ALERT "EQ: Couldn't lock memory region at %p.\n", (void *)vp->mem_start);
 		rc = -EBUSY;
 		goto error1;
 	}
 	else
 	{
-		printk(KERN_INFO "eq_init: Successfully allocated memory region for equalizer\n");
+		printk(KERN_INFO "EQ: Successfully allocated memory region for equalizer.\n");
 	}
 	/* 
 	 * Map Physical address to Virtual address
@@ -122,12 +122,12 @@ static int eq_probe(struct platform_device *pdev)
 	vp->base_addr = ioremap(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 	if (!vp->base_addr)
 	{
-		printk(KERN_ALERT "equalizer: Could not allocate iomem\n");
+		printk(KERN_ALERT "EQ: Could not allocate iomem.\n");
 		rc = -EIO;
 		goto error2;
 	}
 
-	printk("probing done");
+	printk(KERN_INFO "EQ: Probing done");
 error2:
 	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 error1:
@@ -147,17 +147,17 @@ static int eq_remove(struct platform_device *pdev)
 
 static int eq_open(struct inode *i, struct file *f)
 {
-	printk("eq opened\n");
+	printk("EQ: Opened.\n");
 	return 0;
 }
 static int eq_close(struct inode *i, struct file *f)
 {
-	printk("eq closed\n");
+	printk("EQ: Closed.\n");
 	return 0;
 }
 static ssize_t eq_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
-	printk("eq read\n");
+	printk("EQ: Read.\n");
 	return 0;
 }
 static ssize_t eq_write(struct file *f, const char __user *buf, size_t count, loff_t *off)
@@ -177,7 +177,7 @@ static ssize_t eq_write(struct file *f, const char __user *buf, size_t count, lo
 	rp = strchr(lp, ',');
 	if (!rp)
 	{
-		printk("Invalid input, expected format: x,eq_parameter\n");
+		printk("EQ Write: Invalid input, expected format: x,eq_parameter\n");
 		return count;
 	}
 	*rp = '\0';
@@ -194,7 +194,7 @@ static ssize_t eq_write(struct file *f, const char __user *buf, size_t count, lo
 	lp = rp;
 	if (!lp)
 	{
-		printk("Invalid input, expected format: x,eq_parameter\n");
+		printk("EQ Write: Invalid input, expected format: x,eq_parameter\n");
 		return count;
 	}
 	if (lp[0] == '0' && lp[1] == 'x')
@@ -207,15 +207,15 @@ static ssize_t eq_write(struct file *f, const char __user *buf, size_t count, lo
 
 	if (x < 0 || x > 18) // ADDRESS
 	{
-		printk("position of eq_paramater is out of bounds\n");
+		printk("EQ Write: position of eq_paramater is out of bounds\n");
 		return count;
 	}
 
-	printk("ADDR %d V %d \n", x, eq_paramater);
+	printk("EQ Write: ADDR %d V %d \n", x, eq_paramater);
 
 	iowrite32(eq_paramater, vp->base_addr + x);
 
-	printk("Successful write!\n");
+	printk("EQ Write: Successful write!\n");
 	return count;
 }
 
@@ -248,7 +248,7 @@ static unsigned long strToInt(const char *pStr, int len, int base)
 
 		if (idx > sizeof(v) / sizeof(int))
 		{
-			printk("strToInt: illegal character %c\n", pStr[i - 1]);
+			printk(KERN_INFO "EQ: strToInt: illegal character %c\n", pStr[i - 1]);
 			continue;
 		}
 
@@ -267,27 +267,27 @@ static int __init eq_init(void)
 
 	int_cnt = 0;
 
-	printk(KERN_INFO "eq_init: Initialize Module \"%s\"\n", DEVICE_NAME);
+	printk(KERN_INFO "EQ Init: Initialize Module \"%s\"\n", DEVICE_NAME);
 
 	if (alloc_chrdev_region(&first, 0, 1, "eq_region") < 0)
 	{
-		printk(KERN_ALERT "<1>Failed CHRDEV!.\n");
+		printk(KERN_ALERT "EQ Init: <1>Failed CHRDEV!.\n");
 		return -1;
 	}
-	printk(KERN_INFO "Succ CHRDEV!.\n");
+	printk(KERN_INFO "EQ Init: Succ CHRDEV!.\n");
 
 	if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL)
 	{
-		printk(KERN_ALERT "<1>Failed class create!.\n");
+		printk(KERN_ALERT "EQ Init: <1>Failed class create!.\n");
 		goto fail_0;
 	}
-	printk(KERN_INFO "Succ class chardev1 create!.\n");
+	printk(KERN_INFO "EQ Init :Succ class chardev1 create!.\n");
 	if (device_create(cl, NULL, MKDEV(MAJOR(first), 0), NULL, "eq") == NULL)
 	{
 		goto fail_1;
 	}
 
-	printk(KERN_INFO "Device created.\n");
+	printk(KERN_INFO "EQ Init: Device created.\n");
 
 	cdev_init(&c_dev, &eq_fops);
 	if (cdev_add(&c_dev, first, 1) == -1)
@@ -295,7 +295,7 @@ static int __init eq_init(void)
 		goto fail_2;
 	}
 
-	printk(KERN_INFO "Device init.\n");
+	printk(KERN_INFO "EQ Init: Device init.\n");
 
 	return platform_driver_register(&eq_driver);
 
@@ -316,7 +316,7 @@ static void __exit eq_exit(void)
 	device_destroy(cl, MKDEV(MAJOR(first), 0));
 	class_destroy(cl);
 	unregister_chrdev_region(first, 1);
-	printk(KERN_INFO "eq_exit: Exit Device Module \"%s\".\n", DEVICE_NAME);
+	printk(KERN_INFO "EQ Exit: Exit Device Module \"%s\".\n", DEVICE_NAME);
 }
 
 module_init(eq_init);

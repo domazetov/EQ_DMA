@@ -176,8 +176,8 @@ static int axi_dma_probe(struct platform_device *pdev)
 	printk(KERN_NOTICE "DMA Probe: DMA platform driver registered\n");
 	return 0; //ALL OK
 
-error3:
-	iounmap(vp->base_addr);
+//error3:
+//	iounmap(vp->base_addr);
 error2:
 	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 	kfree(vp);

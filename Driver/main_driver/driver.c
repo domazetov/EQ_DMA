@@ -220,10 +220,10 @@ static int axi_dma_close(struct inode *i, struct file *f)
 static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
 	printk("DMA Read.\n");
-	int retr;
+	int ret;
 	int length = 0;
 	u32 value = 0;
-	char buffr[BUFF_SIZE];
+	char buff[BUFF_SIZE];
 	if (endRead)
 	{
 		endRead = 0;
@@ -233,9 +233,9 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 
 	value = rx_vir_buffer[0];
 
-	length = scnprintf(buffr, BUFF_SIZE, "%d ", value);
-	retr = copy_to_user(buf, buffr, length);
-	if (retr)
+	length = scnprintf(buff, BUFF_SIZE, "%d ", value);
+	ret = copy_to_user(buf, buff, length);
+	if (ret)
 	{
 		printk(KERN_INFO "DMA Read: Copy to user failed.\n");
 		return -EFAULT;

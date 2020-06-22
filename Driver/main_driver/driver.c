@@ -46,7 +46,7 @@ static int axi_dma_remove(struct platform_device *pdev);
 int rx_dma_init(void __iomem *base_address);
 u32 rx_dma_simple_write(dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
 
-//static irqreturn_t tx_dma_isr(int irq, void *dev_id);
+static irqreturn_t tx_dma_isr(int irq, void *dev_id);
 int tx_dma_init(void __iomem *base_address);
 u32 tx_dma_simple_write(dma_addr_t TxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
 
@@ -177,8 +177,8 @@ static int axi_dma_probe(struct platform_device *pdev)
 	printk(KERN_NOTICE "DMA Probe: DMA platform driver registered\n");
 	return 0; //ALL OK
 
-//error3:
-//	iounmap(vp->base_addr);
+error3:
+	iounmap(vp->base_addr);
 error2:
 	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 	kfree(vp);
@@ -221,7 +221,6 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 	int ret;
 	int length = 0;
 	u32 value = 0;
-	int i = 0;
 	char buff[BUFF_SIZE];
 	if (endRead)
 	{
@@ -233,7 +232,7 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 	value = rx_vir_buffer[0];
 
 	length = scnprintf(buff, BUFF_SIZE, "%d ", value);
-	ret = copy_to_user(buffer, buff, length);
+	ret = copy_to_user(buf, buff, length);
 	if (ret)
 	{
 		printk(KERN_INFO "DMA Read: Copy to user failed.\n");

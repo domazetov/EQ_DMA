@@ -20,7 +20,6 @@ app
 *.symvers
 *.ko
 *.d
-output.txt
 app_dma_probeOLD
 app_equalizer_probeOLD
 dma_driverOLD

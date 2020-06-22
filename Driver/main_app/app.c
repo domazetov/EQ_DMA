@@ -17,6 +17,7 @@
 int main(void)
 {
 	FILE *fp;
+	FILE *tx;
 	int rx_proxy_fd, tx_proxy_fd;
 	int *rx;
 	int *tx;
@@ -77,13 +78,28 @@ int main(void)
 	}
 
 	memcpy(tx, audio, MAX_PKT_SIZE);
+	close(rx_proxy_fd);
+
+	tx = fopen("/dev/dma_tx", "w");
+	if (tp == NULL)
+	{
+		printf("Cannot open /dev/dma_tx for write\n");
+		return -1;
+	}
+	fprintf(tx, "%d\n", audio[0]);
+	fclose(tx);
+	if (tx == NULL)
+	{
+		printf("Cannot close /dev/dma_tx\n");
+		return -1;
+	}
+
 	memcpy(hardware_res, rx, MAX_PKT_SIZE);
 
 	munmap(tx, MAX_PKT_SIZE);
 	munmap(rx, MAX_PKT_SIZE);
 
 	close(tx_proxy_fd);
-	close(rx_proxy_fd);
 
 	for (i = 0; i < PACKAGE_LENGTH; i++)
 	{

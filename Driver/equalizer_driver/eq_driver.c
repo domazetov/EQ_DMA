@@ -128,7 +128,7 @@ static int eq_probe(struct platform_device *pdev)
 	}
 
 	printk(KERN_INFO "EQ: Probing done.\n");
-	return 0;
+	return 0; // ALL OK
 
 error2:
 	iounmap(vp->base_addr);

@@ -22,7 +22,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Driver for equalizer output");
-#define DEVICE_NAME "eq"
+#define DEVICE_NAME "equalizer"
 #define DRIVER_NAME "eq_driver"
 
 //*************************************************************************//
@@ -127,9 +127,14 @@ static int eq_probe(struct platform_device *pdev)
 		goto error2;
 	}
 
-	printk(KERN_INFO "EQ: Probing done");
+	printk(KERN_INFO "EQ: Probing done.\n");
+	return 0;
+
 error2:
+	iounmap(vp->base_addr);
 	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
+	kfree(vp);
+
 error1:
 	return rc;
 }
@@ -138,7 +143,9 @@ static int eq_remove(struct platform_device *pdev)
 {
 	// Exit Device Module
 	iounmap(vp->base_addr);
-	//release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
+	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
+	kfree(vp);
+	printk(KERN_INFO "EQ: Removed.\n");
 	return 0;
 }
 
@@ -281,7 +288,7 @@ static int __init eq_init(void)
 		printk(KERN_ALERT "EQ Init: <1>Failed class create!.\n");
 		goto fail_0;
 	}
-	printk(KERN_INFO "EQ Init :Succ class chardev1 create!.\n");
+	printk(KERN_INFO "EQ Init: Succ class chardev1 create!.\n");
 	if (device_create(cl, NULL, MKDEV(MAJOR(first), 0), NULL, "eq") == NULL)
 	{
 		goto fail_1;

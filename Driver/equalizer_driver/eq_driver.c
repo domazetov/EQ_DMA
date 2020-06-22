@@ -98,7 +98,7 @@ static int eq_probe(struct platform_device *pdev)
 	vp = (struct eq_info *)kmalloc(sizeof(struct eq_info), GFP_KERNEL);
 	if (!vp)
 	{
-		printk(KERN_ALERT "EQ: Cound not allocate eq device\.n");
+		printk(KERN_ALERT "EQ: Cound not allocate eq device.\n");
 		return -ENOMEM;
 	}
 

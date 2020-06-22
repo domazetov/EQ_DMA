@@ -17,7 +17,7 @@
 int main(void)
 {
 	FILE *fp;
-	FILE *tx;
+	FILE *txp;
 	int rx_proxy_fd, tx_proxy_fd;
 	int *rx;
 	int *tx;
@@ -80,15 +80,15 @@ int main(void)
 	memcpy(tx, audio, MAX_PKT_SIZE);
 	close(rx_proxy_fd);
 
-	tx = fopen("/dev/dma_tx", "w");
+	txp = fopen("/dev/dma_tx", "w");
 	if (tp == NULL)
 	{
 		printf("Cannot open /dev/dma_tx for write\n");
 		return -1;
 	}
-	fprintf(tx, "%d\n", audio[0]);
-	fclose(tx);
-	if (tx == NULL)
+	fprintf(txp, "%d\n", audio[0]);
+	fclose(txp);
+	if (txp == NULL)
 	{
 		printf("Cannot close /dev/dma_tx\n");
 		return -1;

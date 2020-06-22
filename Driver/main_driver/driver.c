@@ -104,6 +104,8 @@ u32 *tx_vir_buffer;
 
 dma_addr_t rx_phy_buffer;
 u32 *rx_vir_buffer;
+
+int endRead = 0;
 //***************************************************************************
 // PROBE AND REMOVE
 

@@ -28,6 +28,7 @@ MODULE_ALIAS("custom:dma controller");
 
 #define DEVICE_NAME "axi_dma"
 #define DRIVER_NAME "dma_driver"
+#define BUFF_SIZE 20
 #define MAX_PKT_LEN (1024 * 4)
 
 //*******************FUNCTION PROTOTYPES************************************
@@ -146,7 +147,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 		rc = -EIO;
 		goto error2;
 	}
-	/*
+
 	// Get irq num
 	vp->irq_num = platform_get_irq(pdev, 0);
 	if (!vp->irq_num)
@@ -166,7 +167,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 	{
 		printk(KERN_INFO "DMA Probe: Registered IRQ %d\n", vp->irq_num);
 	}
-*/
+
 	/* INIT DMA */
 	rx_dma_init(vp->base_addr);
 	tx_dma_init(vp->base_addr);
@@ -216,14 +217,77 @@ static int axi_dma_close(struct inode *i, struct file *f)
 
 static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
-	printk("DMA read.\n");
-	return 0;
+	printk("DMA Read.\n");
+	int ret;
+	int length = 0;
+	u32 value = 0;
+	int i = 0;
+	char buff[BUFF_SIZE];
+	if (endRead)
+	{
+		endRead = 0;
+		return 0;
+	}
+	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
+
+	value = rx_vir_buffer[0];
+
+	length = scnprintf(buff, BUFF_SIZE, "%d ", value);
+	ret = copy_to_user(buffer, buff, length);
+	if (ret)
+	{
+		printk(KERN_INFO "DMA Read: Copy to user failed.\n");
+		return -EFAULT;
+	}
+	printk(KERN_INFO "DMA Read: Succesfully read.\n");
+	endRead = 1;
+	return length;
 }
 
 static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off)
 {
-	printk("DMA write.\n");
-	return 0;
+	printk("DMA Write.\n");
+	char buff[BUFF_SIZE];
+	int ret = 0;
+
+	long int value = 0;
+
+	ret = copy_from_user(buff, buf, length);
+	if (ret)
+	{
+		printk(KERN_INFO "DMA Write: Copy from user failed.\n");
+		return -EFAULT;
+	}
+	buff[length] = '\0';
+
+	// HEX INPUT
+	if (buff[0] == '0' && (buff[1] == 'x' || buff[1] == 'X'))
+	{
+		printk(KERN_INFO "DMA Write: HEX.\n");
+		ret = kstrtol(buff + 2, 16, &value);
+	}
+	// BINARY INPUT
+	else if (buff[0] == '0' && (buff[1] == 'b' || buff[1] == 'B'))
+	{
+		printk(KERN_INFO "DMA Write: BIN.\n");
+		ret = kstrtol(buff + 2, 2, &value);
+	}
+	// DECIMAL INPUT
+	else
+	{
+		printk(KERN_INFO "DMA Write: DEC.\n");
+		ret = kstrtol(buff, 10, &value);
+	}
+
+	if (!ret)
+	{
+		tx_vir_buffer[0] = (u32)value;
+		tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
+	}
+	else
+		printk(KERN_INFO "DMA Write: Wrong command format.\n");
+
+	return length;
 }
 
 static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
@@ -280,7 +344,7 @@ rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function th
 printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", (int)IrqStatus);
 return IRQ_HANDLED;
 }
-
+*/
 static irqreturn_t tx_dma_isr(int irq, void *dev_id)
 {
 	u32 IrqStatus;
@@ -291,11 +355,11 @@ static irqreturn_t tx_dma_isr(int irq, void *dev_id)
 	IrqStatus = ioread32(vp->base_addr + 4);
 	//Send a transaction
 	tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
-
+	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
 	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", (int)IrqStatus);
 	return IRQ_HANDLED;
 }
-*/
+
 int rx_dma_init(void __iomem *base_address)
 {
 	u32 reset = 0x00000004;
@@ -324,21 +388,21 @@ int rx_dma_init(void __iomem *base_address)
 int tx_dma_init(void __iomem *base_address)
 {
 	u32 reset = 0x00000004;
-	//u32 IOC_IRQ_EN;
-	//u32 ERR_IRQ_EN;
+	u32 IOC_IRQ_EN;
+	u32 ERR_IRQ_EN;
 	u32 MM2S_DMACR_reg;
-	//u32 en_interrupt;
+	u32 en_interrupt;
 
-	//IOC_IRQ_EN = 1 << 12; // this is IOC_IrqEn bit in MM2S_DMACR register
-	//ERR_IRQ_EN = 1 << 14; // this is Err_IrqEn bit in MM2S_DMACR register
+	IOC_IRQ_EN = 1 << 12; // this is IOC_IrqEn bit in MM2S_DMACR register
+	ERR_IRQ_EN = 1 << 14; // this is Err_IrqEn bit in MM2S_DMACR register
 	MM2S_DMACR_reg = ioread32(base_address);
 	printk(KERN_INFO "MM2S_DMACR Before reset: 0x%x\n", (int)MM2S_DMACR_reg);
 	iowrite32(reset, base_address); // writing to MM2S_DMACR register. Seting reset bit (3. bit) Resets whole DMA
 
-	//MM2S_DMACR_reg = ioread32(base_address); // Reading from MM2S_DMACR register inside DMA
+	MM2S_DMACR_reg = ioread32(base_address); // Reading from MM2S_DMACR register inside DMA
 
-	//en_interrupt = MM2S_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in MM2S_DMACR
-	//iowrite32(en_interrupt, base_address);					 // writing to MM2S_DMACR register
+	en_interrupt = MM2S_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in MM2S_DMACR
+	iowrite32(en_interrupt, base_address);					 // writing to MM2S_DMACR register
 
 	MM2S_DMACR_reg = ioread32(base_address);
 	printk(KERN_INFO "MM2S_DMACR After reset: 0x%x\n", (int)MM2S_DMACR_reg);
@@ -495,7 +559,7 @@ static void __exit axi_dma_exit(void)
 	int i = 0;
 	for (i = 0; i < MAX_PKT_LEN / 4; i++)
 	{
-		//rx_vir_buffer[i] = 0x00000000;
+		rx_vir_buffer[i] = 0x00000000;
 		tx_vir_buffer[i] = 0x00000000;
 	}
 	printk(KERN_INFO "DMA EXIT: DMA memory reset.\n");

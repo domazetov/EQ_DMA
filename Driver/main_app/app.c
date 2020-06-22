@@ -78,9 +78,8 @@ int main(void)
 	}
 
 	memcpy(tx, audio, MAX_PKT_SIZE);
-	close(rx_proxy_fd);
 
-	write(tx_proxy_fd, "x", 1);
+	write(tx_proxy_fd, "1", 1);
 	ssize_t size = read(rx_proxy_fd, &byte, 1);
 	printf("Read byte %c\n", byte);
 
@@ -90,6 +89,7 @@ int main(void)
 	munmap(rx, MAX_PKT_SIZE);
 
 	close(tx_proxy_fd);
+	close(rx_proxy_fd);
 
 	for (i = 0; i < PACKAGE_LENGTH; i++)
 	{

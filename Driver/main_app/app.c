@@ -18,6 +18,7 @@ int main(void)
 {
 	FILE *fp;
 	FILE *txp;
+	int ftxp;
 	int rx_proxy_fd, tx_proxy_fd;
 	int *rx;
 	int *tx;
@@ -87,6 +88,21 @@ int main(void)
 		return -1;
 	}
 	fprintf(txp, "%d\n", audio[0]);
+	fclose(txp);
+	if (txp == NULL)
+	{
+		printf("Cannot close /dev/dma_tx\n");
+		return -1;
+	}
+
+	txp = fopen("/dev/dma_tx", "r");
+	if (txp == NULL)
+	{
+		printf("Cannot open /dev/dma_tx for read\n");
+		return -1;
+	}
+	fscanf(txp, "%d", ftxp);
+	printf("0x%x\n", ftxp);
 	fclose(txp);
 	if (txp == NULL)
 	{

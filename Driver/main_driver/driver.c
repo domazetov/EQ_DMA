@@ -195,7 +195,7 @@ static int axi_dma_remove(struct platform_device *pdev)
 	printk(KERN_INFO "DMA Probe: resseting");
 	iowrite32(reset, vp->base_addr);
 
-	//free_irq(vp->irq_num, NULL);
+	free_irq(vp->irq_num, NULL);
 	iounmap(vp->base_addr);
 	release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);
 	kfree(vp);

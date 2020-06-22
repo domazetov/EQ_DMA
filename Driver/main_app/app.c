@@ -81,7 +81,7 @@ int main(void)
 	close(rx_proxy_fd);
 
 	txp = fopen("/dev/dma_tx", "w");
-	if (tp == NULL)
+	if (txp == NULL)
 	{
 		printf("Cannot open /dev/dma_tx for write\n");
 		return -1;

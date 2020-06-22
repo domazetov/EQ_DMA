@@ -24,7 +24,7 @@ int main(void)
 
 	unsigned int *hardware_res;
 	// kada testiramo sve pakete for(i = 0; i < NUMBER_OF_PACKAGES; i++)
-	printf("Equalizer started!\n");
+	/*	printf("Equalizer started!\n");
 	for (i = 0; i < (NUMBER_OF_AMPLIFICATIONS + NUMBER_OF_BOUNDARIES); i++)
 	{
 		fp = fopen("/dev/eq", "w");
@@ -44,7 +44,7 @@ int main(void)
 			return -1;
 		}
 	}
-
+*/
 	tx_proxy_fd = open("/dev/dma_tx", O_RDWR);
 
 	if (tx_proxy_fd < 1)

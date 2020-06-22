@@ -173,10 +173,12 @@ static ssize_t eq_write(struct file *f, const char __user *buf, size_t count, lo
 	char buffer[count];
 	char *lp = '\0';
 	char *rp = '\0';
-	int i = 0;
+	int ret = 0;
 	unsigned int x, eq_paramater;
 
-	i = copy_from_user(buffer, buf, count);
+	ret = copy_from_user(buffer, buf, count);
+	if (ret)
+		return -EFAULT;
 	buffer[count - 1] = '\0';
 
 	//extract position on x axis

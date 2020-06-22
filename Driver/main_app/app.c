@@ -17,12 +17,11 @@
 int main(void)
 {
 	FILE *fp;
-	FILE *txp;
-	int ftxp;
 	int rx_proxy_fd, tx_proxy_fd;
 	int *rx;
 	int *tx;
 	int i;
+	char byte;
 
 	unsigned int *hardware_res;
 	// kada testiramo sve pakete for(i = 0; i < NUMBER_OF_PACKAGES; i++)
@@ -81,34 +80,9 @@ int main(void)
 	memcpy(tx, audio, MAX_PKT_SIZE);
 	close(rx_proxy_fd);
 
-	txp = fopen("/dev/dma_tx", "w");
-	if (txp == NULL)
-	{
-		printf("Cannot open /dev/dma_tx for write\n");
-		return -1;
-	}
-	fprintf(txp, "%d\n", audio[0]);
-	fclose(txp);
-	if (txp == NULL)
-	{
-		printf("Cannot close /dev/dma_tx\n");
-		return -1;
-	}
-
-	txp = fopen("/dev/dma_tx", "r");
-	if (txp == NULL)
-	{
-		printf("Cannot open /dev/dma_tx for read\n");
-		return -1;
-	}
-	fscanf(txp, "%d", ftxp);
-	printf("0x%x\n", ftxp);
-	fclose(txp);
-	if (txp == NULL)
-	{
-		printf("Cannot close /dev/dma_tx\n");
-		return -1;
-	}
+	write(tx_proxy_fd, "%d", audio[0]);
+	ssize_t size = read(rx_proxy_fd, &byte, 1);
+	printf("Read byte %c\n", byte);
 
 	memcpy(hardware_res, rx, MAX_PKT_SIZE);
 

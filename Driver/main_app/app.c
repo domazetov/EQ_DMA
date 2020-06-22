@@ -21,11 +21,13 @@ int main(void)
 	int *rx;
 	int *tx;
 	int i;
-	char byte;
+	unsigned int val;
+	char audiof[8];		
 
 	unsigned int *hardware_res;
 	// kada testiramo sve pakete for(i = 0; i < NUMBER_OF_PACKAGES; i++)
-	/*	printf("Equalizer started!\n");
+	printf("Equalizer started!\n");
+/*
 	for (i = 0; i < (NUMBER_OF_AMPLIFICATIONS + NUMBER_OF_BOUNDARIES); i++)
 	{
 		fp = fopen("/dev/eq", "w");
@@ -78,10 +80,14 @@ int main(void)
 	}
 
 	memcpy(tx, audio, MAX_PKT_SIZE);
+	
+	sprintf(audiof, "0x%x", audio[0]);
+	printf("###############%s###############\n", audiof);
 
-	write(tx_proxy_fd, "1", 1);
-	ssize_t size = read(rx_proxy_fd, &byte, 1);
-	printf("Read byte %c\n", byte);
+
+//	write(tx_proxy_fd, "16724992‬", 8);
+	write(tx_proxy_fd, &audiof, sizeof(audiof));
+	ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
 
 	memcpy(hardware_res, rx, MAX_PKT_SIZE);
 

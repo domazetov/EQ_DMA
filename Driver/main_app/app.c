@@ -80,7 +80,7 @@ int main(void)
 	memcpy(tx, audio, MAX_PKT_SIZE);
 	close(rx_proxy_fd);
 
-	write(tx_proxy_fd, "%d", audio[0]);
+	write(tx_proxy_fd, audio[0], 1);
 	ssize_t size = read(rx_proxy_fd, &byte, 1);
 	printf("Read byte %c\n", byte);
 

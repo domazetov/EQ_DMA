@@ -5,6 +5,7 @@ compatible.png
 vezba12
 Vezba12_Instaliranje_Linux-a_na_Zybo_ploci_na_primeru_DMA_VGA.pdf
 BOOT
+FFT-IFFT
 BOOT_DMATest
 BOOT_DMATest1int
 BOOT_DMA2FFT
@@ -20,6 +21,8 @@ app
 *.symvers
 *.ko
 *.d
+output1.txt
+project_3
 app_dma_probeOLD
 app_equalizer_probeOLD
 dma_driverOLD

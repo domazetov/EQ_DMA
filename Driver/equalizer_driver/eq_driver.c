@@ -35,9 +35,6 @@ static int __init eq_init(void);
 static void __exit eq_exit(void);
 static int eq_remove(struct platform_device *pdev);
 
-static char chToUpper(char ch);
-static unsigned long strToInt(const char *pStr, int len, int base);
-
 //*********************GLOBAL VARIABLES*************************************//
 static struct file_operations eq_fops =
 	{
@@ -170,7 +167,7 @@ static ssize_t eq_read(struct file *f, char __user *buf, size_t len, loff_t *off
 static ssize_t eq_write(struct file *f, const char __user *buf, size_t length, loff_t *off)
 {
 
-	char buff[BUFF_SIZE];
+	char buff[length];
 	int ret = 0;
 	unsigned int pos = 0;
 	unsigned long long value = 0;
@@ -196,7 +193,7 @@ static ssize_t eq_write(struct file *f, const char __user *buf, size_t length, l
 		{
 
 			iowrite32(value, vp->base_addr + pos);
-			printk(KERN_INFO "EQ: Wrote: %ld, at Address: %d\n", value, pos);
+			printk(KERN_INFO "EQ: Wrote: %llu, at Address: %d\n", value, pos);
 		}
 	}
 	else

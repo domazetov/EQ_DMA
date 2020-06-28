@@ -30,7 +30,7 @@ static int eq_probe(struct platform_device *pdev);
 static int eq_open(struct inode *i, struct file *f);
 static int eq_close(struct inode *i, struct file *f);
 static ssize_t eq_read(struct file *f, char __user *buf, size_t len, loff_t *off);
-static ssize_t eq_write(struct file *f, const char __user *buf, size_t count, loff_t *off);
+static ssize_t eq_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
 static int __init eq_init(void);
 static void __exit eq_exit(void);
 static int eq_remove(struct platform_device *pdev);
@@ -167,105 +167,44 @@ static ssize_t eq_read(struct file *f, char __user *buf, size_t len, loff_t *off
 	printk("EQ: Read.\n");
 	return 0;
 }
-static ssize_t eq_write(struct file *f, const char __user *buf, size_t count, loff_t *off)
+static ssize_t eq_write(struct file *f, const char __user *buf, size_t length, loff_t *off)
 {
 
-	char buffer[count];
-	char *lp = '\0';
-	char *rp = '\0';
+	char buff[BUFF_SIZE];
 	int ret = 0;
-	unsigned int x, eq_paramater;
-
-	ret = copy_from_user(buffer, buf, count);
+	unsigned int pos = 0;
+	unsigned long long value = 0;
+	unsigned char parameter[10];
+	ret = copy_from_user(buff, buf, length);
 	if (ret)
+	{
+		printk(KERN_INFO "EQ: copy from user failed \n");
 		return -EFAULT;
-	buffer[count - 1] = '\0';
-
-	//extract position on x axis
-	lp = buffer;
-	rp = strchr(lp, ',');
-	if (!rp)
-	{
-		printk("EQ Write: Invalid input, expected format: x,eq_parameter\n");
-		return count;
 	}
-	*rp = '\0';
-	rp++;
+	buff[length] = '\0';
 
-	if (lp[0] == '0' && lp[1] == 'x')
+	sscanf(buff, "%d,%s", &pos, parameter);
+	ret = kstrtoull(parameter, 0, &value);
+
+	if (ret != -EINVAL) //checking for parsing error
 	{
-		lp = lp + 2;
-		x = strToInt(lp, strlen(lp), 16);
-	}
-	else
-		x = strToInt(lp, strlen(lp), 10);
-
-	lp = rp;
-	if (!lp)
-	{
-		printk("EQ Write: Invalid input, expected format: x,eq_parameter\n");
-		return count;
-	}
-	if (lp[0] == '0' && lp[1] == 'x')
-	{
-		lp = lp + 2;
-		eq_paramater = strToInt(lp, strlen(lp), 16);
-	}
-	else
-		eq_paramater = strToInt(lp, strlen(lp), 10);
-
-	if (x < 0 || x > 18) // ADDRESS
-	{
-		printk("EQ Write: position of eq_paramater is out of bounds\n");
-		return count;
-	}
-
-	printk("EQ Write: ADDR %d V %d \n", x, eq_paramater);
-
-	iowrite32(eq_paramater, vp->base_addr + x);
-
-	printk("EQ Write: Successful write!\n");
-	return count;
-}
-
-//***************************************************//
-// HELPER FUNCTIONS (STRING TO INTEGER)
-static char chToUpper(char ch)
-{
-	if ((ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'))
-	{
-		return ch;
-	}
-	else
-	{
-		return ch - ('a' - 'A');
-	}
-}
-
-static unsigned long strToInt(const char *pStr, int len, int base)
-{
-	//                      0,1,2,3,4,5,6,7,8,9,:,;,<,=,>,?,@,A ,B ,C ,D ,E ,F
-	static const int v[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 13, 14, 15};
-	int i = 0;
-	unsigned long val = 0;
-	int dec = 1;
-	int idx = 0;
-
-	for (i = len; i > 0; i--)
-	{
-		idx = chToUpper(pStr[i - 1]) - '0';
-
-		if (idx > sizeof(v) / sizeof(int))
+		if (pos > 18)
 		{
-			printk(KERN_INFO "EQ: strToInt: illegal character %c\n", pStr[i - 1]);
-			continue;
+			printk(KERN_WARNING "EQ: Position exceeded, maximum is 18 and minimum 0 \n");
 		}
+		else
+		{
 
-		val += (v[idx]) * dec;
-		dec *= base;
+			iowrite32(value, vp->base_addr + pos);
+			printk(KERN_INFO "EQ: Wrote: %ld, at Address: %d\n", value, pos);
+		}
 	}
-
-	return val;
+	else
+	{
+		printk(KERN_WARNING "EQ: wrong write format, expected \"pos,paramter\"\n");
+		// return -EINVAL;//parsing error
+	}
+	return length;
 }
 
 //***************************************************//

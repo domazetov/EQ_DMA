@@ -42,7 +42,7 @@ static int __init axi_dma_init(void);
 static void __exit axi_dma_exit(void);
 static int axi_dma_remove(struct platform_device *pdev);
 
-//static irqreturn_t rx_dma_isr(int irq, void *dev_id);
+static irqreturn_t rx_dma_isr(int irq, void *dev_id);
 int rx_dma_init(void __iomem *base_address);
 u32 rx_dma_simple_write(dma_addr_t RxBufferPtr, u32 max_pkt_len, void __iomem *base_address);
 
@@ -170,7 +170,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 	{
 		printk(KERN_INFO "DMA Probe: Registered TX IRQ %d\n", vp->irq_num_tx);
 	}
-	/*
+
 	vp->irq_num_rx = platform_get_irq(pdev, 1);
 	if (!vp->irq_num_rx)
 	{
@@ -189,7 +189,7 @@ static int axi_dma_probe(struct platform_device *pdev)
 	{
 		printk(KERN_INFO "DMA Probe: Registered RX IRQ %d\n", vp->irq_num_rx);
 	}
-*/
+
 	/* INIT DMA */
 	rx_dma_init(vp->base_addr);
 	tx_dma_init(vp->base_addr);
@@ -350,7 +350,7 @@ static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 
 /****************************************************/
 // IMPLEMENTATION OF DMA related functions
-/*
+
 static irqreturn_t rx_dma_isr(int irq, void *dev_id)
 {
 	u32 IrqStatus;
@@ -362,10 +362,10 @@ static irqreturn_t rx_dma_isr(int irq, void *dev_id)
 	//Send a transaction
 	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
 
-	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", (int)IrqStatus);
+	printk(KERN_INFO "DMA ISR RX: IRQ cleared and starting DMA transaction!\nIRQ RX Status: 0x%x\n", (int)IrqStatus);
 	return IRQ_HANDLED;
 }
-*/
+
 static irqreturn_t tx_dma_isr(int irq, void *dev_id)
 {
 	u32 IrqStatus;
@@ -377,7 +377,7 @@ static irqreturn_t tx_dma_isr(int irq, void *dev_id)
 	//Send a transaction
 	tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
 
-	printk(KERN_INFO "DMA ISR: IRQ cleared and starting DMA transaction!\nIRQ Status: 0x%x\n", (int)IrqStatus);
+	printk(KERN_INFO "DMA ISR TX: IRQ cleared and starting DMA transaction!\nIRQ TX Status: 0x%x\n", (int)IrqStatus);
 	return IRQ_HANDLED;
 }
 

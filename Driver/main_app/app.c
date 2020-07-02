@@ -2,7 +2,6 @@
 //#include "result.h"
 
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -99,7 +98,7 @@ int main(void)
 
 	for (i = 0; i < PACKAGE_LENGTH; i++)
 	{
-		fprintf(fp, "0x%x\n", hardware_res[i]);
+		fprintf(fp, "%#08x\n", hardware_res[i]);
 	}
 	fclose(fp);
 
@@ -107,7 +106,7 @@ int main(void)
 	{
 		if (audio[i] != hardware_res[i])
 		{
-			printf("Error at No%d: Input: 0x%x Output: 0x%x\n", i, audio[i], hardware_res[i]);
+			printf("Error at No%d: Input: 0x%x Output: %#08x\n", i, audio[i], hardware_res[i]);
 		}
 	}
 

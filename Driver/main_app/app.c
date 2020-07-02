@@ -22,12 +22,12 @@ int main(void)
 	int *tx;
 	int i;
 	unsigned int val;
-	char audiof[8];		
+	char audiof[8];
 
 	unsigned int *hardware_res;
 	// kada testiramo sve pakete for(i = 0; i < NUMBER_OF_PACKAGES; i++)
 	printf("Equalizer started!\n");
-/*
+	/*
 	for (i = 0; i < (NUMBER_OF_AMPLIFICATIONS + NUMBER_OF_BOUNDARIES); i++)
 	{
 		fp = fopen("/dev/eq", "w");
@@ -80,13 +80,14 @@ int main(void)
 	}
 
 	memcpy(tx, audio, MAX_PKT_SIZE);
-	
+
 	sprintf(audiof, "0x%x", audio[0]);
 	printf("###############%s###############\n", audiof);
 
-
-//	write(tx_proxy_fd, "16724992‬", 8);
+	//	write(tx_proxy_fd, "16724992‬", 8);
 	write(tx_proxy_fd, &audiof, sizeof(audiof));
+
+	sleep(5);
 	ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
 
 	memcpy(hardware_res, rx, MAX_PKT_SIZE);
@@ -99,7 +100,7 @@ int main(void)
 
 	for (i = 0; i < PACKAGE_LENGTH; i++)
 	{
-		fprintf(fp, "0x%x\n", hardware_res[i]);
+		fprintf(fp, "%#08x\n", hardware_res[i]);
 	}
 	fclose(fp);
 
@@ -107,7 +108,7 @@ int main(void)
 	{
 		if (audio[i] != hardware_res[i])
 		{
-			printf("Error at No%d: Input: 0x%x Output: 0x%x\n", i, audio[i], hardware_res[i]);
+			printf("Error at No%d: Input: 0x%x Output: %#08x\n", i, audio[i], hardware_res[i]);
 		}
 	}
 

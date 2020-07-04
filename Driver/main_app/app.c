@@ -86,7 +86,7 @@ int main(void)
 
 	//write(tx_proxy_fd, &audiof, sizeof(audiof));
 
-	//sleep(5);
+	sleep(10);
 	//ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
 
 	memcpy(hardware_res, rx, MAX_PKT_SIZE);

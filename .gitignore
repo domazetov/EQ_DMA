@@ -1,6 +1,7 @@
 project_1
 DMATest_DriverOLD
 DMA-Proxy
+final
 compatible.png
 IP
 BOOT_DMATestx2
@@ -10,6 +11,8 @@ BOOT_DMATestx2
 vezba12
 Vezba12_Instaliranje_Linux-a_na_Zybo_ploci_na_primeru_DMA_VGA.pdf
 BOOT
+BOOT2
+BOOT3
 FFT-IFFT
 BOOT_DMATest
 BOOT_DMATest1int

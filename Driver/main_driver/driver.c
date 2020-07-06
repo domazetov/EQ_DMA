@@ -358,11 +358,11 @@ static irqreturn_t rx_dma_isr(int irq, void *dev_id)
 	IrqStatus = ioread32(vp->base_addr + 4 + 48);			   //read irq status from S2MM_DMASR register
 	iowrite32(IrqStatus | 0x00007000, vp->base_addr + 4 + 48); //clear irq status in S2MM_DMASR register
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
-	IrqStatus = ioread32(vp->base_addr + 4 + 48);
+	//IrqStatus = ioread32(vp->base_addr + 4 + 48);
 	//Send a transaction
 	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
 
-	printk(KERN_INFO "DMA ISR RX: IRQ cleared and starting DMA transaction!\nIRQ RX Status: 0x%x\n", (int)IrqStatus);
+	printk(KERN_INFO "DMA ISR RX: IRQ cleared and starting DMA transaction!\n"); //IRQ RX Status: 0x%x\n", (int)IrqStatus);
 	return IRQ_HANDLED;
 }
 
@@ -373,32 +373,32 @@ static irqreturn_t tx_dma_isr(int irq, void *dev_id)
 	IrqStatus = ioread32(vp->base_addr + 4);			  //read irq status from MM2S_DMASR register
 	iowrite32(IrqStatus | 0x00007000, vp->base_addr + 4); //clear irq status in MM2S_DMASR register
 	//(clearing is done by writing 1 on 13. bit in MM2S_DMASR (IOC_Irq)
-	IrqStatus = ioread32(vp->base_addr + 4);
+	//IrqStatus = ioread32(vp->base_addr + 4);
 	//Send a transaction
 	tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr); //My function that starts a DMA transaction
 
-	printk(KERN_INFO "DMA ISR TX: IRQ cleared and starting DMA transaction!\nIRQ TX Status: 0x%x\n", (int)IrqStatus);
+	printk(KERN_INFO "DMA ISR TX: IRQ cleared and starting DMA transaction!\n"); //IRQ TX Status: 0x%x\n", (int)IrqStatus);
 	return IRQ_HANDLED;
 }
 
 int rx_dma_init(void __iomem *base_address)
 {
 	u32 reset = 0x00000004;
-	//u32 IOC_IRQ_EN;
-	//u32 ERR_IRQ_EN;
+	u32 IOC_IRQ_EN;
+	u32 ERR_IRQ_EN;
 	u32 S2MM_DMACR_reg;
-	//u32 en_interrupt;
+	u32 en_interrupt;
 
-	//IOC_IRQ_EN = 1 << 12; // this is IOC_IrqEn bit in S2MM_DMACR register
-	//ERR_IRQ_EN = 1 << 14; // this is Err_IrqEn bit in S2MM_DMACR register
-	S2MM_DMACR_reg = ioread32(base_address + 48);
+	IOC_IRQ_EN = 1 << 12; // this is IOC_IrqEn bit in S2MM_DMACR register
+	ERR_IRQ_EN = 1 << 14; // this is Err_IrqEn bit in S2MM_DMACR register
+	//S2MM_DMACR_reg = ioread32(base_address + 48);
 	//printk(KERN_INFO "S2MM_DMACR Before reset: 0x%x\n", (int)S2MM_DMACR_reg);
 	iowrite32(reset, base_address + 48); // writing to S2MM_DMACR register. Seting reset bit (3. bit) Resets whole DMA
 
 	//S2MM_DMACR_reg = ioread32(base_address + 48);
 
-	//en_interrupt = S2MM_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in S2MM_DMACR
-	//iowrite32(en_interrupt, base_address + 48);				 // writing to S2MM_DMACR register
+	en_interrupt = S2MM_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in S2MM_DMACR
+	iowrite32(en_interrupt, base_address + 48);				 // writing to S2MM_DMACR register
 
 	//S2MM_DMACR_reg = ioread32(base_address + 48);
 	//printk(KERN_INFO "S2MM_DMACR After reset: 0x%x\n", (int)S2MM_DMACR_reg);

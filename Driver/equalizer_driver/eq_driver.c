@@ -24,6 +24,7 @@ MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Driver for equalizer output");
 #define DEVICE_NAME "equalizer"
 #define DRIVER_NAME "eq_driver"
+#define BUFF_SIZE 20
 
 //*************************************************************************//
 static int eq_probe(struct platform_device *pdev);
@@ -35,6 +36,7 @@ static int __init eq_init(void);
 static void __exit eq_exit(void);
 static int eq_remove(struct platform_device *pdev);
 
+int endRead = 0;
 //*********************GLOBAL VARIABLES*************************************//
 static struct file_operations eq_fops =
 	{
@@ -159,10 +161,34 @@ static int eq_close(struct inode *i, struct file *f)
 	printk("EQ: Closed.\n");
 	return 0;
 }
-static ssize_t eq_read(struct file *f, char __user *buf, size_t len, loff_t *off)
+static ssize_t eq_read(struct file *f, char __user *buf, size_t length, loff_t *off)
 {
+	int ret = 0;
+	char buff[length];
+	int value = 0;
+	int i;
+	int pos = 0;
 	printk("EQ: Read.\n");
-	return 0;
+	if (endRead)
+	{
+		endRead = 0;
+		return 0;
+	}
+	for (i = 0; i < 19; i++)
+	{
+		value = ioread(vp->base_addr + pos);
+		length = scnprintf(buff, length, "%d", value);
+		pos++;
+		ret = copy_to_user(buf, buff, length);
+		if (ret)
+		{
+			printk(KERN_INFO "DMA Read: Copy to user failed.\n");
+			return -EFAULT;
+		}
+	}
+	printk(KERN_INFO "EQ Read done.\n");
+	endRead = 1;
+	return length;
 }
 static ssize_t eq_write(struct file *f, const char __user *buf, size_t length, loff_t *off)
 {

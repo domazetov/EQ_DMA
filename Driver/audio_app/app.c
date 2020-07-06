@@ -1,5 +1,4 @@
 #include "audiohex.h"
-#include "result.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +7,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-#define AUDIO_LENGTH 1024 * 2
+#define AUDIO_LENGTH 1024 * 100
 #define PACKAGE_LENGTH 1024
 #define MAX_PKT_SIZE 1024 * 4
 
@@ -19,7 +18,6 @@ int main(void)
 	int rx_proxy_fd, tx_proxy_fd;
 	int *rx;
 	int *tx;
-	int error = 0;
 	int i, count;
 	unsigned int val;
 	char audiof[8];
@@ -71,12 +69,14 @@ int main(void)
 		printf("###############%s###############\n", audiof);
 
 		write(tx_proxy_fd, &audiof, sizeof(audiof));
-
-		sleep(10);
+		write(tx_proxy_fd, &audiof, sizeof(audiof));
+		sleep(1);
+		
 		ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
-
+		size = read(rx_proxy_fd, &val, sizeof(val));
+		sleep(1);
 		memcpy(hardware_res, rx, MAX_PKT_SIZE);
-
+		
 		for (i = 0; i < PACKAGE_LENGTH; i++)
 		{
 			fprintf(fp, "%#0010x\n", hardware_res[i]);
@@ -89,6 +89,6 @@ int main(void)
 	close(tx_proxy_fd);
 	close(rx_proxy_fd);
 
-	printf("Equalizer completed!\nNumber of errors:%d\n", error);
+	printf("Equalizer completed!\n");
 	return 0;
 }

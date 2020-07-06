@@ -164,28 +164,23 @@ static int eq_close(struct inode *i, struct file *f)
 static ssize_t eq_read(struct file *f, char __user *buf, size_t length, loff_t *off)
 {
 	int ret = 0;
-	char buff[length];
+	char buff[BUFF_SIZE];
 	int value = 0;
-	int i;
-	int pos = 0;
 	printk("EQ: Read.\n");
 	if (endRead)
 	{
 		endRead = 0;
 		return 0;
 	}
-	for (i = 0; i < 19; i++)
+	value = ioread32(vp->base_addr);
+	length = scnprintf(buff, BUFF_SIZE, "%d", value);
+	ret = copy_to_user(buf, buff, BUFF_SIZE);
+	if (ret)
 	{
-		value = ioread32(vp->base_addr + pos);
-		length = scnprintf(buff, length, "%d", value);
-		pos++;
-		ret = copy_to_user(buf, buff, length);
-		if (ret)
-		{
-			printk(KERN_INFO "DMA Read: Copy to user failed.\n");
-			return -EFAULT;
-		}
+		printk(KERN_INFO "DMA Read: Copy to user failed.\n");
+		return -EFAULT;
 	}
+
 	printk(KERN_INFO "EQ Read done.\n");
 	endRead = 1;
 	return length;

@@ -1,5 +1,5 @@
 #include "coeficients.h"
-//#include "result.h"
+#include "result.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +20,7 @@ int main(void)
 	int rx_proxy_fd, tx_proxy_fd;
 	int *rx;
 	int *tx;
+	int error = 0;
 	int i;
 	unsigned int val;
 	char audiof[8];
@@ -105,12 +106,13 @@ int main(void)
 
 	for (i = 0; i < PACKAGE_LENGTH / 16; i++)
 	{
-		if (audio[i] != hardware_res[i])
+		if (result[i] > hardware_res[i] + error_tolerance)
 		{
-			printf("Error at No%d: Input: 0x%x Output: 0x%x\n", i, audio[i], hardware_res[i]);
+			printf("Error at No%d: Result: 0x%x Output: 0x%x\n", i, result[i], hardware_res[i]);
+			error++;
 		}
 	}
 
-	printf("Equalizer completed!\n");
+	printf("Equalizer completed!\nNumber of errors:%d", error);
 	return 0;
 }

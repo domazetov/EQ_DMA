@@ -176,7 +176,7 @@ static ssize_t eq_read(struct file *f, char __user *buf, size_t length, loff_t *
 	}
 	for (i = 0; i < 19; i++)
 	{
-		value = ioread(vp->base_addr + pos);
+		value = ioread32(vp->base_addr + pos);
 		length = scnprintf(buff, length, "%d", value);
 		pos++;
 		ret = copy_to_user(buf, buff, length);

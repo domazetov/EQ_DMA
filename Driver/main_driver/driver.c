@@ -395,7 +395,7 @@ int rx_dma_init(void __iomem *base_address)
 	//printk(KERN_INFO "S2MM_DMACR Before reset: 0x%x\n", (int)S2MM_DMACR_reg);
 	iowrite32(reset, base_address + 48); // writing to S2MM_DMACR register. Seting reset bit (3. bit) Resets whole DMA
 
-	//S2MM_DMACR_reg = ioread32(base_address + 48);
+	S2MM_DMACR_reg = ioread32(base_address + 48);
 
 	en_interrupt = S2MM_DMACR_reg | IOC_IRQ_EN | ERR_IRQ_EN; // seting 13. and 15.th bit in S2MM_DMACR
 	iowrite32(en_interrupt, base_address + 48);				 // writing to S2MM_DMACR register

@@ -166,18 +166,18 @@ static ssize_t eq_read(struct file *f, char __user *buf, size_t length, loff_t *
 	int ret = 0;
 	char buff[BUFF_SIZE];
 	int value = 0;
-	printk("EQ: Read.\n");
 	if (endRead)
 	{
 		endRead = 0;
 		return 0;
 	}
+	printk("EQ: Read.\n");
 	value = ioread32(vp->base_addr);
 	length = scnprintf(buff, BUFF_SIZE, "%d", value);
 	ret = copy_to_user(buf, buff, BUFF_SIZE);
 	if (ret)
 	{
-		printk(KERN_INFO "DMA Read: Copy to user failed.\n");
+		printk(KERN_INFO "EQ Read: Copy to user failed.\n");
 		return -EFAULT;
 	}
 

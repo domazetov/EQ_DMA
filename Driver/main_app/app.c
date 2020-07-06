@@ -82,6 +82,7 @@ int main(void)
 
 	memcpy(tx, audio, MAX_PKT_SIZE);
 
+	sprintf(audiof, "0x%x", audio[0]);
 	printf("###############%s###############\n", audiof);
 
 	write(tx_proxy_fd, &audiof, sizeof(audiof));
@@ -103,9 +104,9 @@ int main(void)
 	}
 	fclose(fp);
 
-	for (i = 0; i < PACKAGE_LENGTH / 16; i++)
+	for (i = 0; i < PACKAGE_LENGTH; i++)
 	{
-		if (result[i] > hardware_res[i] + error_tolerance)
+		if ((result[i] < (hardware_res[i] + error_tolerance)) && (result[i] > (hardware_res[i] - error_tolerance)))
 		{
 			//printf("Error at No%d: Result: 0x%x Output: 0x%x\n", i, result[i], hardware_res[i]);
 			error++;

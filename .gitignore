@@ -5,7 +5,6 @@ final
 compatible.png
 IP
 BOOT_DMATestx2
-Matlab
 IP
 BOOT_DMATestx2
 vezba12
@@ -13,6 +12,7 @@ Vezba12_Instaliranje_Linux-a_na_Zybo_ploci_na_primeru_DMA_VGA.pdf
 BOOT
 BOOT2
 BOOT3
+BOOT4
 FFT-IFFT
 BOOT_DMATest
 BOOT_DMATest1int
@@ -20,6 +20,7 @@ BOOT_DMA2FFT
 project_2
 DMA.png
 app
+*.wav
 *.o
 *.cmd
 *.mod.c
@@ -29,6 +30,7 @@ app
 *.symvers
 *.ko
 *.d
+*.exe
 output1.txt
 project_3
 app_dma_probeOLD

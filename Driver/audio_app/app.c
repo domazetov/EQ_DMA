@@ -70,13 +70,13 @@ int main(void)
 
 		write(tx_proxy_fd, &audiof, sizeof(audiof));
 		write(tx_proxy_fd, &audiof, sizeof(audiof));
-		sleep(1);
-		
+		usleep(200);
+
 		ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
 		size = read(rx_proxy_fd, &val, sizeof(val));
-		sleep(1);
+		usleep(200);
 		memcpy(hardware_res, rx, MAX_PKT_SIZE);
-		
+
 		for (i = 0; i < PACKAGE_LENGTH; i++)
 		{
 			fprintf(fp, "%#0010x\n", hardware_res[i]);

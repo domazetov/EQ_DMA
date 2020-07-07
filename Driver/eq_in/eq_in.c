@@ -132,7 +132,6 @@ error1:
 
 static int eq_in_remove(struct platform_device *pdev)
 {
-  int i = 0;
   // Exit Device Module
   iowrite32(0, vp->base_addr + 8);
   iowrite32(0, vp->base_addr);

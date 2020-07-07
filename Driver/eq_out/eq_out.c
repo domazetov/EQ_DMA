@@ -26,6 +26,7 @@ MODULE_DESCRIPTION("Driver for eq_out ouvput");
 #define DRIVER_NAME "eq_out_driver"
 #define BUFF_SIZE 20
 
+int endRead = 0;
 //*******************FUNCTION PROTOTYPES************************************
 
 static int eq_out_probe(struct platform_device *pdev);
@@ -132,7 +133,6 @@ error1:
 
 static int eq_out_remove(struct platform_device *pdev)
 {
-  int i = 0;
   // Exit Device Module
   iowrite32(0, vp->base_addr + 8);
   iowrite32(0, vp->base_addr);
@@ -157,7 +157,7 @@ static int eq_out_close(struct inode *i, struct file *f)
   //printk(KERN_INFO "eq_out closed\n");
   return 0;
 }
-static ssize_t eq_out_read(struct file *f, char __user *buf, size_t len, loff_t *off)
+static ssize_t eq_out_read(struct file *f, char __user *buf, size_t length, loff_t *off)
 {
   int ret = 0;
   char buff[BUFF_SIZE];

@@ -38,9 +38,9 @@ int main(void)
 			return -1;
 		}
 		if (i < NUMBER_OF_AMPLIFICATIONS)
-			fprintf(fp, "%d,%#08x\n", i, p[i]);
+			fprintf(fp, "%d,%d\n", i, p[i]);
 		else
-			fprintf(fp, "%d,%#08x\n", i, pr[i - 10]);
+			fprintf(fp, "%d,%d\n", i, pr[i - 10]);
 		fclose(fp);
 		if (fp == NULL)
 		{

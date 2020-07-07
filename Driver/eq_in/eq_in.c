@@ -186,7 +186,7 @@ static ssize_t eq_in_write(struct file *f, const char __user *buf, size_t length
   {
     iowrite32(pos, vp->base_addr);
     iowrite32(val, vp->base_addr + 8);
-    printk(KERN_INFO "EQ: Writing value: %d at position %d\n", val, pos);
+    printk(KERN_INFO "EQ: Writing value: %d at position %d.\n", val, pos);
   }
   else
   {

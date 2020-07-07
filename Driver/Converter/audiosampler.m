@@ -13,10 +13,16 @@ data(:,2) = [];
 
 x=data(1:102400);
 
-fileID = fopen('audiodouble.txt','w');
-fprintf(fileID,'%.7g\n',x);
-fclose(fileID);
 
+
+%fileID = fopen('audiodouble.txt','w');
+%fprintf(fileID,'%.7g\n',x);
+%fclose(fileID);
+
+f = fopen('outputdouble.txt');
+datay = textscan(f,'%s');
+fclose(f);
+y = str2double(datay{1}(1:1:end));
 
 %yHex = num2hex(x);
 %yWav = hex2num(yHex);
@@ -31,6 +37,7 @@ fclose(fileID);
 %end
 %fclose(fileID);
 
-player = audioplayer(x, fs);
+%player = audioplayer(x, fs);
+%play(player);
 
-play(player);
+audiowrite('original.wav',x,fs);

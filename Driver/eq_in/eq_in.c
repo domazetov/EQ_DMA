@@ -171,7 +171,7 @@ static ssize_t eq_in_write(struct file *f, const char __user *buf, size_t length
   int ret = 0;
   unsigned int pos = 0;
   unsigned int val = 0;
-  printk("EQ: Write.\n");
+  printk("EQ: Write start.\n");
   ret = copy_from_user(buff, buf, length);
   if (ret)
   {
@@ -186,13 +186,14 @@ static ssize_t eq_in_write(struct file *f, const char __user *buf, size_t length
   {
     iowrite32(pos, vp->base_addr);
     iowrite32(val, vp->base_addr + 8);
+    printk(KERN_INFO "EQ: Writing value: %d at position %d\n", val, pos);
   }
   else
   {
     printk(KERN_WARNING "eq_in_write: Wrong write format, expected \"xpos,ypos,rgb\"\n");
     // return -EINVAL;//parsing error
   }
-  printk(KERN_INFO "EQ Write done.\n");
+  printk(KERN_INFO "EQ: Write done.\n");
   return length;
 }
 

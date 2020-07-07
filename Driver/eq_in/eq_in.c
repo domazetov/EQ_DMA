@@ -165,7 +165,7 @@ static ssize_t eq_in_write(struct file *f, const char __user *buf, size_t length
 {
   char buff[BUFF_SIZE];
   int ret = 0;
-  unsigned int pos = 0b00001;
+  unsigned int pos = 0;
   unsigned int val = 0;
   printk("EQ: Write.\n");
   ret = copy_from_user(buff, buf, length);
@@ -176,7 +176,7 @@ static ssize_t eq_in_write(struct file *f, const char __user *buf, size_t length
   }
   buff[length] = '\0';
 
-  sscanf(buff, "%d", &val);
+  sscanf(buff, "%d,%d", &pos, &val);
 
   if (ret != -EINVAL) //checking for parsing error
   {

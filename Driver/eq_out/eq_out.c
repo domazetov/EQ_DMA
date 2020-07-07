@@ -161,7 +161,7 @@ static ssize_t eq_out_read(struct file *f, char __user *buf, size_t length, loff
 {
   int ret = 0;
   char buff[BUFF_SIZE];
-  unsigned int pos = 0b00001;
+  unsigned int pos = 0;
   int value = 0;
   if (endRead)
   {
@@ -169,14 +169,16 @@ static ssize_t eq_out_read(struct file *f, char __user *buf, size_t length, loff
     return 0;
   }
   printk("EQ: Read.\n");
-
-  iowrite32(pos, vp->base_addr);
-  value = ioread32(vp->base_addr + 8);
+  for (pos = 0; pos < 19; pos++)
+  {
+    iowrite32(pos, vp->base_addr);
+    value = ioread32(vp->base_addr + 8);
+    printk(KERN_INFO "%d\n", value);
+  }
 
   length = scnprintf(buff, BUFF_SIZE, "%d", value);
   ret = copy_to_user(buf, buff, BUFF_SIZE);
 
-  printk(KERN_INFO "%d\n", value);
   if (ret)
   {
     printk(KERN_INFO "EQ Read: Copy to user failed.\n");

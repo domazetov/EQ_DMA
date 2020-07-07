@@ -133,8 +133,13 @@ error1:
 static int eq_in_remove(struct platform_device *pdev)
 {
   // Exit Device Module
-  iowrite32(0, vp->base_addr + 8);
-  iowrite32(0, vp->base_addr);
+  int pos;
+  for (pos = 0; pos < 19; pos++)
+  {
+    iowrite32(pos, vp->base_addr);
+    iowrite32(0, vp->base_addr + 8);
+    printk(KERN_INFO "%d\n", value);
+  }
   printk(KERN_INFO "eq_in_remove: eq_in remove in process");
   iounmap(vp->base_addr);
   release_mem_region(vp->mem_start, vp->mem_end - vp->mem_start + 1);

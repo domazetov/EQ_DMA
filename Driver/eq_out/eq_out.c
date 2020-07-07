@@ -134,7 +134,6 @@ error1:
 static int eq_out_remove(struct platform_device *pdev)
 {
   // Exit Device Module
-  iowrite32(0, vp->base_addr + 8);
   iowrite32(0, vp->base_addr);
   printk(KERN_INFO "eq_out_remove: eq_out remove in process");
   iounmap(vp->base_addr);

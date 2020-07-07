@@ -175,6 +175,8 @@ static ssize_t eq_out_read(struct file *f, char __user *buf, size_t length, loff
 
   length = scnprintf(buff, BUFF_SIZE, "%d", value);
   ret = copy_to_user(buf, buff, BUFF_SIZE);
+
+  printk(KERN_INFO "%d\n", value);
   if (ret)
   {
     printk(KERN_INFO "EQ Read: Copy to user failed.\n");

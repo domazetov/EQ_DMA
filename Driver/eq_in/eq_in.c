@@ -138,7 +138,6 @@ static int eq_in_remove(struct platform_device *pdev)
   {
     iowrite32(pos, vp->base_addr);
     iowrite32(0, vp->base_addr + 8);
-    printk(KERN_INFO "%d\n", value);
   }
   printk(KERN_INFO "eq_in_remove: eq_in remove in process");
   iounmap(vp->base_addr);

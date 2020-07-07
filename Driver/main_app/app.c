@@ -104,11 +104,11 @@ int main(void)
 	}
 	fclose(fp);
 
-	for (i = 0; i < PACKAGE_LENGTH; i++)
+	for (i = 0; i < PACKAGE_LENGTH / 16; i++)
 	{
 		if ((result[i] < (hardware_res[i] + error_tolerance)) && (result[i] > (hardware_res[i] - error_tolerance)))
 		{
-			//printf("Error at No%d: Result: 0x%x Output: 0x%x\n", i, result[i], hardware_res[i]);
+			printf("Error at No%d: Result: 0x%x Output: 0x%x\n", i, result[i], hardware_res[i]);
 			error++;
 		}
 	}

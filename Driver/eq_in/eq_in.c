@@ -180,8 +180,8 @@ static ssize_t eq_in_write(struct file *f, const char __user *buf, size_t length
 
   if (ret != -EINVAL) //checking for parsing error
   {
-    iowrite32(pos, vp->base_addr + 8);
-    iowrite32(val, vp->base_addr);
+    iowrite32(pos, vp->base_addr);
+    iowrite32(val, vp->base_addr + 8);
   }
   else
   {

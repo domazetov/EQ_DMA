@@ -170,8 +170,8 @@ static ssize_t eq_out_read(struct file *f, char __user *buf, size_t length, loff
   }
   printk("EQ: Read.\n");
 
-  iowrite32(pos, vp->base_addr + 8);
-  value = ioread32(vp->base_addr);
+  iowrite32(pos, vp->base_addr);
+  value = ioread32(vp->base_addr + 8);
 
   length = scnprintf(buff, BUFF_SIZE, "%d", value);
   ret = copy_to_user(buf, buff, BUFF_SIZE);

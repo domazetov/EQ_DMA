@@ -2,7 +2,7 @@
 #include "math.h"
 #include "string.h"
 #include "stdlib.h"
-#define SONG_LENGTH 1024 * 130
+#define SONG_LENGTH 1024 * 138
 
 const float Q = 1.0 / 0x7fffff;
 
@@ -19,9 +19,9 @@ int main()
     FILE *fp;
     FILE *fo;
     int i;
-    double result[SONG_LENGTH];
+    double *result = malloc(SONG_LENGTH * sizeof(double));
 
-    int number[SONG_LENGTH];
+    int *number = malloc(SONG_LENGTH * sizeof(int));
 
     fp = fopen("../audio_app/output.txt", "r");
     for (i = 0; i < SONG_LENGTH; i++)

@@ -1,7 +1,8 @@
 #include "stdio.h"
 #include "math.h"
+#include "stdlib.h"
 
-#define SONG_LENGTH 1024 * 130
+#define SONG_LENGTH 1024 * 138
 
 int convert(double val)
 {
@@ -18,8 +19,9 @@ int main()
     double amps[10];
     int boundaries[9];
 
-    double number[SONG_LENGTH];
-    int result[SONG_LENGTH];
+    double *number = malloc(SONG_LENGTH * sizeof(double));
+    int *result = malloc(SONG_LENGTH * sizeof(int));
+    ;
     int i, k = 0;
 
     fp = fopen("amps.txt", "r");

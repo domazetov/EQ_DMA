@@ -17,7 +17,9 @@ y = str2double(datay{1}(1:1:end));
 %yHex = num2hex(x);
 %yWav = hex2num(yHex);
 
-player = audioplayer(x, fs);
+%y = -1 * y;
+
+player = audioplayer(y, fs);
 play(player);
 
 audiowrite('izlaz.wav',y,fs);

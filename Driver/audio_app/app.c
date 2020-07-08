@@ -10,6 +10,8 @@
 
 #define AUDIO_LENGTH 1024 * 100
 #define PACKAGE_LENGTH 1024
+#define NUMBER_OF_AMPLIFICATIONS 10
+#define NUMBER_OF_BOUNDARIES 9
 #define MAX_PKT_SIZE 1024 * 4
 
 int main(void)

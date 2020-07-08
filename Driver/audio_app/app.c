@@ -7,7 +7,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-#define AUDIO_LENGTH 1024 * 120
+#define AUDIO_LENGTH 1024 * 130
 #define PACKAGE_LENGTH 1024
 #define NUMBER_OF_AMPLIFICATIONS 10
 #define NUMBER_OF_BOUNDARIES 9

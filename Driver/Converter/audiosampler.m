@@ -46,7 +46,7 @@ y = str2double(datay{1}(1:1:end));
 
 %y = -1 * y;
 
-player = audioplayer(y, fs, 24);
+player = audioplayer(x, fs, 24);
 play(player);
 
 audiowrite('izlaz.wav',y,fs);

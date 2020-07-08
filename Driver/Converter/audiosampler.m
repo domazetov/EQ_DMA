@@ -17,7 +17,7 @@ x=data(1:1024*130);
     %CIST SIGNAL [0 0 0 0 0 0 0 0 0 0]} 
 
 %ODREDJIVANJE AMPLITUDE ZA SVAKU OD FREKVENCIJA
-amps  = [-10 -10 -10 -5 0 5 10 10 10 10];
+amps  = [-8 -6 -4 -2 0 2 4 6 8 10];
 amps = 10 .^ ((amps) / 40);
 
 fileID = fopen('amps.txt','w');
@@ -26,7 +26,7 @@ fclose(fileID);
 
 freq = [5 10 19 35 70 117 163 232 348];
 
-freq = freq * 100;
+%freq = freq * 100;
 
 fileID = fopen('freq.txt','w');
 fprintf(fileID,'%d\n',freq);
@@ -43,8 +43,6 @@ y = str2double(datay{1}(1:1:end));
 
 %yHex = num2hex(x);
 %yWav = hex2num(yHex);
-
-%y = -1 * y;
 
 player = audioplayer(y, fs, 24);
 play(player);

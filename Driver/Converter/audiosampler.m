@@ -18,6 +18,7 @@ x=data(1:1024*130);
 
 %ODREDJIVANJE AMPLITUDE ZA SVAKU OD FREKVENCIJA
 amps  = [-8 -6 -4 -2 0 2 4 6 8 10];
+amps = amps * 10;
 amps = 10 .^ ((amps) / 40);
 
 fileID = fopen('amps.txt','w');

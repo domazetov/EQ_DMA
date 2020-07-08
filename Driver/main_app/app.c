@@ -106,7 +106,7 @@ int main(void)
 
 	for (i = 0; i < PACKAGE_LENGTH; i++)
 	{
-		if ((result[i] > (hardware_res[i] + error_tolerance)) && (result[i] < (hardware_res[i] - error_tolerance)) && (result[i] < (hardware_res[i] + error_tolerance)) && (result[i] > (hardware_res[i] - error_tolerance)))
+		if ((result[i] < (hardware_res[i] + error_tolerance)) && (result[i] > (hardware_res[i] - error_tolerance)))
 		{
 			//printf("Error at No%d: Result: 0x%x Output: 0x%x\n", i, result[i], hardware_res[i]);
 			error++;

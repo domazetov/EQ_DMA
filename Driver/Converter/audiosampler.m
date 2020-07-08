@@ -26,7 +26,7 @@ fclose(fileID);
 
 freq = [5 10 19 35 70 117 163 232 348];
 
-freq = freq * 2;
+freq = freq * 20;
 
 fileID = fopen('freq.txt','w');
 fprintf(fileID,'%d\n',freq);
@@ -46,7 +46,7 @@ y = str2double(datay{1}(1:1:end));
 
 %y = -1 * y;
 
-player = audioplayer(x, fs, 24);
+player = audioplayer(y, fs, 24);
 play(player);
 
 audiowrite('izlaz.wav',y,fs);

@@ -35,6 +35,7 @@ app
 Driver/Converter/amps.txt
 Driver/Converter/audiodouble.txt
 Driver/Converter/freq.txt
+Driver/Converter/outputdouble.txt
 output1.txt
 project_3
 app_dma_probeOLD

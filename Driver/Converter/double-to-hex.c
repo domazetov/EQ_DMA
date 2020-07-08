@@ -1,7 +1,7 @@
 #include "stdio.h"
 #include "math.h"
 
-#define SONG_LENGTH 102400
+#define SONG_LENGTH 1024 * 120
 
 int convert(double val)
 {
@@ -23,7 +23,7 @@ int main()
     }
     fclose(fp);
 
-    fo = fopen("audiohex.h", "w");
+    fo = fopen("../audio_app/audiohex.h", "w");
 
     fprintf(fo, "unsigned int audio[] = \n{\n");
     for (i = 0; i < SONG_LENGTH; i++)

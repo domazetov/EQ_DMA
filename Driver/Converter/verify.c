@@ -10,7 +10,7 @@ int main()
 
     int number[SONG_LENGTH];
 
-    fp = fopen("output.txt", "r");
+    fp = fopen("../audio_app/output.txt", "r");
     for (i = 0; i < SONG_LENGTH; i++)
     {
         fscanf(fp, "%#0010x", &number[i]);

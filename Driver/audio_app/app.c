@@ -1,4 +1,5 @@
 #include "audiohex.h"
+#include "coeficients.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +28,26 @@ int main(void)
 	unsigned int *hardware_res;
 
 	printf("Equalizer started!\n");
+
+	for (i = 0; i < (NUMBER_OF_AMPLIFICATIONS + NUMBER_OF_BOUNDARIES); i++)
+	{
+		fp = fopen("/dev/eq_in", "w");
+		if (fp == NULL)
+		{
+			printf("Cannot open /dev/eq for write\n");
+			return -1;
+		}
+		if (i < NUMBER_OF_AMPLIFICATIONS)
+			fprintf(fp, "%d,%d\n", i, p[i]);
+		else
+			fprintf(fp, "%d,%d\n", i, pr[i - 10]);
+		fclose(fp);
+		if (fp == NULL)
+		{
+			printf("Cannot close /dev/equalizer\n");
+			return -1;
+		}
+	}
 
 	tx_proxy_fd = open("/dev/dma_tx", O_RDWR);
 

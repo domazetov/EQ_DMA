@@ -24,11 +24,17 @@ fileID = fopen('amps.txt','w');
 fprintf(fileID,'%.7g\n',amps);
 fclose(fileID);
 
-freq = [5 10 19 35 70 117 163 232 348];
+freq =
 
-fileID = fopen('freq.txt','w');
-fprintf(fileID,'%d\n',freq);
-fclose(fileID);
+f_k1 = 5; 
+f_k2 = 10;  
+f_k3 = 19;
+f_k4 = 35;
+f_k5 = 70;
+f_k6 = 117;
+f_k7 = 163;
+f_k8 = 232;
+f_k9 = 348;
 
 fileID = fopen('audiodouble.txt','w');
 fprintf(fileID,'%.7g\n',x);

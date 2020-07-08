@@ -1,4 +1,3 @@
-#include "audiohex.h"
 #include "coeficients.h"
 
 #include <stdio.h>

@@ -26,6 +26,8 @@ fclose(fileID);
 
 freq = [5 10 19 35 70 117 163 232 348];
 
+freq = freq * 2;
+
 fileID = fopen('freq.txt','w');
 fprintf(fileID,'%d\n',freq);
 fclose(fileID);

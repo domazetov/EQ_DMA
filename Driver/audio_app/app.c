@@ -6,7 +6,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-#define AUDIO_LENGTH 1024 * 1877
+#define AUDIO_LENGTH 1024 * 130
 #define PACKAGE_LENGTH 1024
 #define NUMBER_OF_AMPLIFICATIONS 10
 #define NUMBER_OF_BOUNDARIES 18
@@ -100,7 +100,7 @@ int main(void)
 		memcpy(tx, array, MAX_PKT_SIZE);
 
 		sprintf(audiof, "0x%x", array[0]);
-		printf("###############%s###############\n", audiof);
+		//printf("###############%s###############\n", audiof);
 
 		write(tx_proxy_fd, &audiof, sizeof(audiof));
 		write(tx_proxy_fd, &audiof, sizeof(audiof));

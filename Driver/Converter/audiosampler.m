@@ -3,7 +3,7 @@ clear all;
 [data, fs] = audioread('govor.wav','double');
 data(:,2) = [];
 
-x=data(1:1024*138);
+x=data(1:1024*130);
 
 %AMPLITUDE U DB PRIMERI{
 

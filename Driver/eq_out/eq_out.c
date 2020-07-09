@@ -168,7 +168,7 @@ static ssize_t eq_out_read(struct file *f, char __user *buf, size_t length, loff
     return 0;
   }
   printk("EQ: Read.\n");
-  for (pos = 0; pos < 19; pos++)
+  for (pos = 0; pos < 28; pos++)
   {
     iowrite32(pos, vp->base_addr);
     value = ioread32(vp->base_addr + 8);

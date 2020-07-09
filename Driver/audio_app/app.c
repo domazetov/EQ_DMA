@@ -1,5 +1,4 @@
 #include "coeficients.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +9,7 @@
 #define AUDIO_LENGTH 1024 * 1877
 #define PACKAGE_LENGTH 1024
 #define NUMBER_OF_AMPLIFICATIONS 10
-#define NUMBER_OF_BOUNDARIES 9
+#define NUMBER_OF_BOUNDARIES 18
 #define MAX_PKT_SIZE 1024 * 4
 
 int main(void)
@@ -25,18 +24,31 @@ int main(void)
 	char audiof[8];
 
 	int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
+	int *input = (int *)malloc(AUDIO_LENGTH * sizeof(int));
 
 	unsigned int *hardware_res;
 
 	printf("Equalizer started!\n");
+
+	audiohex = fopen("input.txt", "r");
+	if (audiohex == NULL)
+	{
+		printf("Cannot open input.txt\n");
+		exit(EXIT_FAILURE);
+	}
+	for (i = 0; i < AUDIO_LENGTH; i++)
+	{
+		fscanf(audiohex, "%x", &input[i]);
+	}
+	fclose(audiohex);
 
 	for (i = 0; i < (NUMBER_OF_AMPLIFICATIONS + NUMBER_OF_BOUNDARIES); i++)
 	{
 		fp = fopen("/dev/eq_in", "w");
 		if (fp == NULL)
 		{
-			printf("Cannot open /dev/eq for write\n");
-			return -1;
+			printf("Cannot open /dev/eq_in for write\n");
+			exit(EXIT_FAILURE);
 		}
 		if (i < NUMBER_OF_AMPLIFICATIONS)
 			fprintf(fp, "%d,%d\n", i, p[i]);
@@ -45,7 +57,7 @@ int main(void)
 		fclose(fp);
 		if (fp == NULL)
 		{
-			printf("Cannot close /dev/equalizer\n");
+			printf("Cannot close /dev/eq_in\n");
 			return -1;
 		}
 	}
@@ -83,7 +95,7 @@ int main(void)
 
 	for (count = 0; count < AUDIO_LENGTH / PACKAGE_LENGTH; count++)
 	{
-		memcpy(array, audio + count * 1024, 1024 * sizeof(int));
+		memcpy(array, input + count * 1024, 1024 * sizeof(int));
 
 		memcpy(tx, array, MAX_PKT_SIZE);
 

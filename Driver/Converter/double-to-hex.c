@@ -2,7 +2,7 @@
 #include "math.h"
 #include "stdlib.h"
 
-#define SONG_LENGTH 1024 * 138
+#define SONG_LENGTH 1024 * 130
 
 int convert(double val)
 {
@@ -16,8 +16,10 @@ int main()
     FILE *fpr;
     FILE *fo;
 
+    FILE *foa;
+
     double amps[10];
-    int boundaries[9];
+    int boundaries[18];
 
     double *number = malloc(SONG_LENGTH * sizeof(double));
     int *result = malloc(SONG_LENGTH * sizeof(int));
@@ -39,7 +41,7 @@ int main()
     fclose(fa);
 
     fpr = fopen("freq.txt", "r");
-    for (i = 0; i < 9; i++)
+    for (i = 0; i < 18; i++)
     {
         fscanf(fp, "%d", &boundaries[i]);
     }
@@ -67,10 +69,10 @@ int main()
     fprintf(fo, "};\n\n\n");
 
     fprintf(fo, "unsigned int pr[] = \n{\n");
-    for (i = 0; i < 9; i++)
+    for (i = 0; i < 18; i++)
     {
         fprintf(fo, "%#0010x", boundaries[i]);
-        if (i != 10 - 1)
+        if (i != 18)
         {
             fprintf(fo, ",");
             k++;
@@ -82,25 +84,15 @@ int main()
         }
     }
     k = 0;
-    fprintf(fo, "};\n\n\n");
+    fprintf(fo, "};\n");
+    fclose(fo);
 
-    fprintf(fo, "unsigned int audio[] = \n{\n");
+    foa = fopen("../audio_app/input.txt", "w");
     for (i = 0; i < SONG_LENGTH; i++)
     {
         result[i] = convert(number[i]);
-        fprintf(fo, "%#0010x", result[i]);
-        if (i != SONG_LENGTH - 1)
-        {
-            fprintf(fo, ",");
-            k++;
-            if (k == 5)
-            {
-                k = 0;
-                fprintf(fo, "\n");
-            }
-        }
+        fprintf(foa, "%#0010x\n", result[i]);
     }
-    fprintf(fo, "};\n");
-    fclose(fo);
+    fclose(foa);
     return 0;
 }

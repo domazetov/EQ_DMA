@@ -1,6 +1,6 @@
 clc;
 clear all;
-[data, fs] = audioread('govor2.wav','double');
+[data, fs] = audioread('govor.wav','double');
 data(:,2) = [];
 
 x=data(1:1024*138);
@@ -17,35 +17,34 @@ x=data(1:1024*138);
     %CIST SIGNAL [0 0 0 0 0 0 0 0 0 0]} 
 
 %ODREDJIVANJE AMPLITUDE ZA SVAKU OD FREKVENCIJA
+freq = [5 10 19 35 70 117 163 232 348 676 792 861 907 954 989 1005 1014 1019];
 amps  = [-10 -10 -10 -5 0 5 10 10 10 10];
 %amps = amps * 10;
 amps = 10 .^ ((amps) / 40);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% fileID = fopen('amps.txt','w');
-% fprintf(fileID,'%.7g\n',amps);
-% fclose(fileID);
+fileID = fopen('amps.txt','w');
+fprintf(fileID,'%.7g\n',amps);
+fclose(fileID);
+
+%freq = freq * 100;
+
+fileID = fopen('freq.txt','w');
+fprintf(fileID,'%d\n',freq);
+fclose(fileID);
 % 
-% freq = [5 10 19 35 70 117 163 232 348];
-% 
-% %freq = freq * 100;
-% 
-% fileID = fopen('freq.txt','w');
-% fprintf(fileID,'%d\n',freq);
-% fclose(fileID);
-% % 
-% fileID = fopen('audiodouble.txt','w');
-% fprintf(fileID,'%.7g\n',x);
-% fclose(fileID);
+fileID = fopen('audiodouble.txt','w');
+fprintf(fileID,'%.7g\n',x);
+fclose(fileID);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-f = fopen('outputdouble.txt');
-datay = textscan(f,'%s');
-fclose(f);
-y = str2double(datay{1}(1:1:end));
-audiowrite('izlaz.wav',y,fs);
+% f = fopen('outputdouble.txt');
+% datay = textscan(f,'%s');
+% fclose(f);
+% y = str2double(datay{1}(1:1:end));
+% audiowrite('izlaz.wav',y,fs);
 
 %yHex = num2hex(x);
 %yWav = hex2num(yHex);

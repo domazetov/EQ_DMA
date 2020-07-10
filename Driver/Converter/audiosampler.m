@@ -1,9 +1,10 @@
 clc;
 clear all;
-[data, fs] = audioread('govor.wav','double');
+[data, fs] = audioread('bruises.wav','double');
 data(:,2) = [];
 
-x=data(1:1024*130);
+x=data(1:1024*1877);
+N_fft = 1024;
 
 %AMPLITUDE U DB PRIMERI{
 
@@ -24,19 +25,19 @@ amps = 10 .^ ((amps) / 40);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fileID = fopen('amps.txt','w');
-fprintf(fileID,'%.7g\n',amps);
-fclose(fileID);
+% fileID = fopen('amps.txt','w');
+% fprintf(fileID,'%.7g\n',amps);
+% fclose(fileID);
 
-%freq = freq * 100;
-
-fileID = fopen('freq.txt','w');
-fprintf(fileID,'%d\n',freq);
-fclose(fileID);
+% %freq = freq * 100;
 % 
-fileID = fopen('audiodouble.txt','w');
-fprintf(fileID,'%.7g\n',x);
-fclose(fileID);
+% fileID = fopen('freq.txt','w');
+% fprintf(fileID,'%d\n',freq);
+% fclose(fileID);
+% % 
+% fileID = fopen('audiodouble.txt','w');
+% fprintf(fileID,'%.7g\n',xf);
+% fclose(fileID);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -54,3 +55,31 @@ fclose(fileID);
 
 
 % audiowrite('original.wav',x,fs);
+
+
+
+
+fr = fopen('real_o.txt');
+datayr = textscan(fr,'%s');
+fclose(fr);
+realy = str2double(datayr{1}(1:1:end));
+
+fi = fopen('imag_o.txt');
+datayi = textscan(fi,'%s');
+fclose(fi);
+imagy = str2double(datayi{1}(1:1:end));
+
+y = complex(realy,imagy);
+
+
+for ii = 0:129
+    ypr = y(((N_fft*ii)+1):(N_fft*(ii+1)));
+    Ypr = ypr.';
+    out(((N_fft*ii)+1):(N_fft*(ii+1))) = ifft(Ypr);
+end
+
+player = audioplayer(out, fs, 24);
+play(player);
+
+
+ %audiowrite('izlaz.wav',out,fs);

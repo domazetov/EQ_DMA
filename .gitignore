@@ -1,6 +1,7 @@
 project_1
 DMATest_DriverOLD
 DMA-Proxy
+TBEQ3
 final
 compatible.png
 IP
@@ -22,6 +23,7 @@ BOOT_DMA2FFT
 project_2
 DMA.png
 app
+*.pdf
 *.wav
 *.o
 *.cmd
@@ -37,6 +39,7 @@ Driver/Converter/amps.txt
 Driver/Converter/audiodouble.txt
 Driver/Converter/freq.txt
 Driver/Converter/outputdouble.txt
+Driver/Converter/testing/
 output1.txt
 project_3
 app_dma_probeOLD

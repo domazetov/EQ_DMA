@@ -2,7 +2,7 @@
 #include "math.h"
 #include "string.h"
 #include "stdlib.h"
-#define SONG_LENGTH 1024 * 130
+#define SONG_LENGTH 1024 * 1877
 
 const float Q = 1.0 / 0x7fffff;
 

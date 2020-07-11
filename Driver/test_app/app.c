@@ -1,6 +1,5 @@
 #include "coeficients.h"
 #include "result.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +10,7 @@
 #define PACKAGE_LENGTH 1024
 #define NUMBER_OF_PACKAGES 215
 #define NUMBER_OF_AMPLIFICATIONS 10
-#define NUMBER_OF_BOUNDARIES 9
+#define NUMBER_OF_BOUNDARIES 18
 #define MAX_PKT_SIZE 1024 * 4
 
 int main(void)
@@ -34,8 +33,8 @@ int main(void)
 		fp = fopen("/dev/eq_in", "w");
 		if (fp == NULL)
 		{
-			printf("Cannot open /dev/eq for write\n");
-			return -1;
+			printf("Cannot open /dev/eq_in for write\n");
+			exit(EXIT_FAILURE);
 		}
 		if (i < NUMBER_OF_AMPLIFICATIONS)
 			fprintf(fp, "%d,%d\n", i, p[i]);
@@ -44,7 +43,7 @@ int main(void)
 		fclose(fp);
 		if (fp == NULL)
 		{
-			printf("Cannot close /dev/equalizer\n");
+			printf("Cannot close /dev/eq_in\n");
 			return -1;
 		}
 	}
@@ -103,7 +102,7 @@ int main(void)
 		fprintf(fp, "0x%x\n", hardware_res[i]);
 	}
 	fclose(fp);
-
+	/*
 	for (i = 0; i < PACKAGE_LENGTH; i++)
 	{
 		if ((result[i] < (hardware_res[i] + error_tolerance)) && (result[i] > (hardware_res[i] - error_tolerance)))
@@ -112,7 +111,7 @@ int main(void)
 			error++;
 		}
 	}
-
+*/
 	printf("Equalizer completed!\nNumber of errors:%d\n", error);
 	return 0;
 }

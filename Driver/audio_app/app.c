@@ -24,10 +24,10 @@ int main(void)
 	char start[] = "start";
 	int audiohex_size = 0;
 
-	int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
-	int *input = (int *)malloc(AUDIO_LENGTH * sizeof(int));
+	//int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
 
-	unsigned int *hardware_res;
+	int *hardware_res;
+	int *input;
 
 	printf("Equalizer started!\n");
 
@@ -41,9 +41,12 @@ int main(void)
 	fseek(audiohex, 0, SEEK_END);
 	audiohex_size = ftell(audiohex);
 	fseek(audiohex, 0, SEEK_SET);
-	printf("##########%d\n", audiohex_size / 12);
+	printf("Number of input.txt lines: %d\n", audiohex_size / 12);
+	audiohex_size = audiohex_size / 12;
 
-	for (i = 0; i < AUDIO_LENGTH; i++)
+	input = (int *)malloc(audiohex_size * sizeof(int));
+
+	for (i = 0; i < audiohex_size; i++) //for (i = 0; i < AUDIO_LENGTH; i++)
 	{
 		fscanf(audiohex, "%x", &input[i]);
 	}
@@ -86,12 +89,12 @@ int main(void)
 
 	fp = fopen("output.txt", "w+");
 
-	hardware_res = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
+	hardware_res = (int *)malloc(audiohex_size * sizeof(int));
 
-	rx = (int *)mmap(NULL, MAX_PKT_SIZE,
+	rx = (int *)mmap(NULL, audiohex_size,
 					 PROT_READ | PROT_WRITE, MAP_SHARED, rx_proxy_fd, 0);
 
-	tx = (int *)mmap(NULL, MAX_PKT_SIZE,
+	tx = (int *)mmap(NULL, audiohex_size,
 					 PROT_READ | PROT_WRITE, MAP_SHARED, tx_proxy_fd, 0);
 
 	if ((rx == MAP_FAILED) || (tx == MAP_FAILED))
@@ -100,25 +103,25 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	for (count = 0; count < AUDIO_LENGTH / PACKAGE_LENGTH; count++)
+	//for (count = 0; count < AUDIO_LENGTH / PACKAGE_LENGTH; count++)
+	//{
+	//memcpy(array, input + count * 1024, 1024 * sizeof(int));
+
+	memcpy(tx, input, audiohex_size);
+
+	write(tx_proxy_fd, &start, sizeof(start));
+	usleep(200);
+
+	ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
+	size = read(rx_proxy_fd, &val, sizeof(val));
+	usleep(200);
+	memcpy(hardware_res, rx, audiohex_size);
+
+	for (i = 0; i < audiohex_size; i++)
 	{
-		memcpy(array, input + count * 1024, 1024 * sizeof(int));
-
-		memcpy(tx, array, MAX_PKT_SIZE);
-
-		write(tx_proxy_fd, &start, sizeof(start));
-		usleep(200);
-
-		ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
-		size = read(rx_proxy_fd, &val, sizeof(val));
-		usleep(200);
-		memcpy(hardware_res, rx, MAX_PKT_SIZE);
-
-		for (i = 0; i < PACKAGE_LENGTH; i++)
-		{
-			fprintf(fp, "%#0010x\n", hardware_res[i]);
-		}
+		fprintf(fp, "%#0010x\n", hardware_res[i]);
 	}
+	//}
 
 	munmap(tx, MAX_PKT_SIZE);
 	munmap(rx, MAX_PKT_SIZE);

@@ -279,33 +279,10 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 	}
 	buff[length - 1] = '\0';
 
-	result = strcmp(start, buff);
-	printk(KERN_INFO "%s\n", buff);
-	printk(KERN_INFO "%s\n", start);
-	printk(KERN_INFO "########################strcmp(str1, str2) = %d\n", result);
-
-	// HEX INPUT
-	if (buff[0] == '0' && (buff[1] == 'x' || buff[1] == 'X'))
-	{
-		printk(KERN_INFO "DMA Write: HEX.\n");
-		ret = kstrtol(buff + 2, 16, &value);
-	}
-	// BINARY INPUT
-	else if (buff[0] == '0' && (buff[1] == 'b' || buff[1] == 'B'))
-	{
-		printk(KERN_INFO "DMA Write: BIN.\n");
-		ret = kstrtol(buff + 2, 2, &value);
-	}
-	// DECIMAL INPUT
-	else
-	{
-		printk(KERN_INFO "DMA Write: DEC.\n");
-		ret = kstrtol(buff, 10, &value);
-	}
+	ret = strcmp(start, buff);
 
 	if (!ret)
 	{
-		//tx_vir_buffer[0] = (u32)value;
 		tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
 	}
 	else

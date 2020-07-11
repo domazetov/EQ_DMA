@@ -288,9 +288,9 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 		udelay(1000);
 		rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
 		udelay(1000);
-		tx_dma_simple_write(tx_phy_buffer + 1024, MAX_PKT_LEN, vp->base_addr);
+		tx_dma_simple_write(tx_phy_buffer + MAX_PKT_LEN, MAX_PKT_LEN, vp->base_addr);
 		udelay(1000);
-		rx_dma_simple_write(rx_phy_buffer + 1024, MAX_PKT_LEN, vp->base_addr);
+		rx_dma_simple_write(rx_phy_buffer + MAX_PKT_LEN, MAX_PKT_LEN, vp->base_addr);
 	}
 	else
 		printk(KERN_INFO "DMA Write: Wrong command format.\n");

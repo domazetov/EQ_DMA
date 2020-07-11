@@ -111,8 +111,8 @@ int main(void)
 	write(tx_proxy_fd, &start, sizeof(start));
 	usleep(200);
 
-	ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
-	size = read(rx_proxy_fd, &val, sizeof(val));
+	///ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
+	//size = read(rx_proxy_fd, &val, sizeof(val));
 	usleep(200);
 	memcpy(hardware_res, rx, audiohex_size * 4);
 

@@ -50,11 +50,11 @@ fileID = fopen('audiodouble.txt','w');
 fprintf(fileID,'%.7g\n',x);
 fclose(fileID);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% f = fopen('outputdouble.txt');
-% datay = textscan(f,'%s');
-% fclose(f);
-% y = str2double(datay{1}(1:1:end));
-% audiowrite('izlaz.wav',y,fs);
+f = fopen('outputdouble.txt');
+datay = textscan(f,'%s');
+fclose(f);
+y = str2double(datay{1}(1:1:end));
+audiowrite('izlaz.wav',y,fs);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 

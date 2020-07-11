@@ -29,7 +29,7 @@ MODULE_ALIAS("custom:dma controller");
 #define DEVICE_NAME "axi_dma"
 #define DRIVER_NAME "dma_driver"
 #define BUFF_SIZE 20
-#define MAX_PKT_LEN (1024 * 4)
+#define MAX_PKT_LEN (1024 * 4 * 2)
 
 //*******************FUNCTION PROTOTYPES************************************
 static int axi_dma_probe(struct platform_device *pdev);

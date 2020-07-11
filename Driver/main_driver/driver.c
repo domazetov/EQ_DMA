@@ -283,7 +283,7 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 	if (num_of_wr == 1)
 	{
 		len = scnprintf(buff, BUFF_SIZE, "%c", '1');
-		printk(KERN_INFO "############ 1\n");
+		//printk(KERN_INFO "############ 1\n");
 		ret = copy_to_user(buf, buff, len);
 		if (ret)
 			return -EFAULT;
@@ -291,7 +291,7 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 	else
 	{
 		len = scnprintf(buff, BUFF_SIZE, "%c", '0');
-		printk(KERN_INFO "############ 0\n");
+		//printk(KERN_INFO "############ 0\n");
 		ret = copy_to_user(buf, buff, len);
 		if (ret)
 			return -EFAULT;

@@ -87,8 +87,9 @@ int main(void)
 		printf("Unable to open DMA S2MM");
 		exit(EXIT_FAILURE);
 	}
+
 	ssize_t size = read(rx_proxy_fd, &end, sizeof(end));
-	printf("Finished1: %c\n", end);
+	printf("Finished: %c\n", end);
 
 	fp = fopen("output.txt", "w+");
 
@@ -112,12 +113,12 @@ int main(void)
 	write(tx_proxy_fd, &start, sizeof(start));
 
 	size = read(rx_proxy_fd, &end, sizeof(end));
-	printf("Finished2: %c\n", end);
+	printf("Finished: %c\n", end);
 
 	usleep(200);
 
 	size = read(rx_proxy_fd, &end, sizeof(end));
-	printf("Finished3: %c\n", end);
+	printf("Finished: %c\n", end);
 
 	usleep(200);
 	memcpy(hardware_res, rx, audiohex_size * 4);

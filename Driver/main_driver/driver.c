@@ -280,6 +280,7 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 	buff[length] = '\0';
 
 	result = strcmp(buff, start);
+	printk(KERN_INFo "%s\n", buff);
 	printk(KERN_INFO "########################strcmp(str1, str2) = %d\n", result);
 
 	// HEX INPUT

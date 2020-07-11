@@ -9,7 +9,7 @@
 #include <linux/uaccess.h>
 #include <linux/errno.h>
 #include <linux/device.h>
-
+#include <linux/delay.h>
 #include <linux/io.h>			   //iowrite ioread
 #include <linux/slab.h>			   //kmalloc kfree
 #include <linux/platform_device.h> //platform driver
@@ -286,8 +286,10 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 	{
 		tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
 		printk(KERN_INFO "DMA Write: Started. tx_vir_buffer %d\n", tx_vir_buffer[0]);
-		//rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
-		tx_dma_simple_write(tx_phy_buffer + 1024, MAX_PKT_LEN, vp->base_addr);
+		rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
+		udelay(1000);
+		tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
+		rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
 	}
 	else
 		printk(KERN_INFO "DMA Write: Wrong command format.\n");

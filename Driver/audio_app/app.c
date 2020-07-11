@@ -88,9 +88,6 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	ssize_t size = read(rx_proxy_fd, &end, sizeof(end));
-	printf("Finished: %c\n", end);
-
 	fp = fopen("output.txt", "w+");
 
 	rx = (int *)mmap(NULL, audiohex_size * 4,
@@ -112,12 +109,14 @@ int main(void)
 	memcpy(tx, input, audiohex_size * 4);
 	write(tx_proxy_fd, &start, sizeof(start));
 
-	size = read(rx_proxy_fd, &end, sizeof(end));
-	printf("Finished: %c\n", end);
-
 	usleep(200);
 
-	size = read(rx_proxy_fd, &end, sizeof(end));
+	ssize_t size = read(rx_proxy_fd, &end, sizeof(end));
+	while (end != '1')
+	{
+		size = read(rx_proxy_fd, &end, sizeof(end));
+		usleep(2000);
+	}
 	printf("Finished: %c\n", end);
 
 	usleep(200);

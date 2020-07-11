@@ -30,7 +30,7 @@ MODULE_ALIAS("custom:dma controller");
 #define DRIVER_NAME "dma_driver"
 #define BUFF_SIZE 20
 #define MAX_PKT_LEN 1024 * 4
-#define NUM_OF_PKT 120
+#define NUM_OF_PKT 130
 
 int num_of_wr = 0;
 
@@ -327,9 +327,9 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 		for (i = 0; i < NUM_OF_PKT; i++)
 		{
 			tx_dma_simple_write(tx_phy_buffer + i * MAX_PKT_LEN, MAX_PKT_LEN, vp->base_addr);
-			udelay(2000);
+			udelay(4000);
 			rx_dma_simple_write(rx_phy_buffer + i * MAX_PKT_LEN, MAX_PKT_LEN, vp->base_addr);
-			udelay(2000);
+			udelay(4000);
 			num_of_wr--;
 		}
 	}

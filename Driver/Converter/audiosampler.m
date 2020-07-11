@@ -3,7 +3,7 @@ clear all;
 [data, fs] = audioread('govor.wav','double');
 data(:,2) = [];
 
-x=data(1:1024*2);
+x=data(1:1024*120);
 N_fft = 1024;
 
 % for ii = 0:129

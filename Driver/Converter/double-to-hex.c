@@ -2,7 +2,7 @@
 #include "math.h"
 #include "stdlib.h"
 
-#define SONG_LENGTH 1024 * 2
+#define SONG_LENGTH 1024 * 120
 
 int convert(double val)
 {

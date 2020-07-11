@@ -268,7 +268,6 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 	int ret = 0;
 	char buff[BUFF_SIZE];
 	printk("DMA Read.\n");
-	printk(KERN_INFO "$$$$$$$$ num_of_wr: %d", num_of_wr);
 	if (endRead)
 	{
 		endRead = 0;

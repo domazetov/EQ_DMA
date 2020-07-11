@@ -189,22 +189,27 @@ static int DAE_remove(struct platform_device *pdev)
   {
 
   case 0: //FIRST
-    printk(KERN_WARNING "FIRST_remove: platform driver removing\n");
-    iowrite32(0, eq_in->base_addr);
+    int pos;
+    for (pos = 0; pos < 19; pos++)
+    {
+      iowrite32(pos, eq_in->base_addr);
+      iowrite32(0, eq_in->base_addr + 8);
+    }
+    printk(KERN_INFO "eq_in_remove: eq_in remove in process");
     iounmap(eq_in->base_addr);
     release_mem_region(eq_in->mem_start, eq_in->mem_end - eq_in->mem_start + 1);
     kfree(eq_in);
-    printk(KERN_INFO "FIRST_remove: FIRST removed\n");
+    printk(KERN_INFO "eq_in_remove: eq_in driver removed");
 
     break;
 
   case 1: //SECOND
-    printk(KERN_WARNING "SECOND_remove: platform driver removing\n");
     iowrite32(0, eq_out->base_addr);
+    printk(KERN_INFO "eq_out_remove: eq_out remove in process");
     iounmap(eq_out->base_addr);
     release_mem_region(eq_out->mem_start, eq_out->mem_end - eq_out->mem_start + 1);
     kfree(eq_out);
-    printk(KERN_INFO "SECOND_remove: SECOND removed \n");
+    printk(KERN_INFO "eq_out_remove: eq_out driver removed");
     counter--;
     break;
   }

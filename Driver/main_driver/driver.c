@@ -290,7 +290,7 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 		if (ret)
 			return -EFAULT;
 	}
-	return 0;
+	return len;
 }
 
 static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off)

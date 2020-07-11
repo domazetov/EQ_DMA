@@ -22,7 +22,7 @@ int main(void)
 	int error = 0;
 	int i;
 	unsigned int val;
-	char audiof[8];
+	char start[] = "start";
 
 	unsigned int *hardware_res;
 	// kada testiramo sve pakete for(i = 0; i < NUMBER_OF_PACKAGES; i++)
@@ -81,11 +81,9 @@ int main(void)
 
 	memcpy(tx, audio, MAX_PKT_SIZE);
 
-	//sprintf(audiof, "0x%x", audio[0]);
 	//printf("###############%s###############\n", audiof);
 
-	//write(tx_proxy_fd, &audiof, sizeof(audiof));
-	fprintf(tx_proxy_fd, "start");
+	write(tx_proxy_fd, &start, sizeof(start));
 
 	//sleep(10);
 	ssize_t size = read(rx_proxy_fd, &val, sizeof(val));

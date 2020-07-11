@@ -117,7 +117,7 @@ int main(void)
 		size = read(rx_proxy_fd, &end, sizeof(end));
 		usleep(2000);
 	}
-	printf("Finished: %c\n", end);
+	printf("Equalizing completed: %c\n", end);
 
 	usleep(200);
 	memcpy(hardware_res, rx, audiohex_size * 4);
@@ -134,6 +134,5 @@ int main(void)
 	close(tx_proxy_fd);
 	close(rx_proxy_fd);
 
-	printf("Equalizer completed!\n");
 	return 0;
 }

@@ -279,6 +279,8 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 
 	ret = strcmp(start, buff);
 
+	printk(KERN_INFO "%s %s %d\n", start, buff, ret);
+
 	if (!ret)
 	{
 		tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr);

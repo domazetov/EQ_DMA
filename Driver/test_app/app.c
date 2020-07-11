@@ -81,8 +81,6 @@ int main(void)
 
 	memcpy(tx, audio, MAX_PKT_SIZE);
 
-	//printf("###############%s###############\n", audiof);
-
 	write(tx_proxy_fd, &start, sizeof(start));
 
 	//sleep(10);
@@ -101,16 +99,7 @@ int main(void)
 		fprintf(fp, "0x%x\n", hardware_res[i]);
 	}
 	fclose(fp);
-	/*
-	for (i = 0; i < PACKAGE_LENGTH; i++)
-	{
-		if ((result[i] < (hardware_res[i] + error_tolerance)) && (result[i] > (hardware_res[i] - error_tolerance)))
-		{
-			//printf("Error at No%d: Result: 0x%x Output: 0x%x\n", i, result[i], hardware_res[i]);
-			error++;
-		}
-	}
-*/
-	printf("Equalizer completed!\nNumber of errors:%d\n", error);
+
+	printf("Equalizer completed!\n");
 	return 0;
 }

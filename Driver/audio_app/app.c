@@ -24,7 +24,7 @@ int main(void)
 	char audiof[8];
 	int audiohex_size = 0;
 
-	int count = 0;
+	int countt = 0;
 	char c;
 
 	int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
@@ -48,7 +48,7 @@ int main(void)
 
 	for (c = getc(audiohex); c != EOF; c = getc(audiohex))
 		if (c == '\n') // Increment count if this character is newline
-			count = count + 1;
+			countt = countt + 1;
 
 	printf("##########%d\n", count);
 

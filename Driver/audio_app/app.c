@@ -26,7 +26,7 @@ int main(void)
 
 	//int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
 
-	int *hardware_res;
+	unsigned int *hardware_res;
 	int *input;
 
 	printf("Equalizer started!\n");
@@ -45,6 +45,7 @@ int main(void)
 	audiohex_size = audiohex_size / 12;
 
 	input = (int *)malloc(audiohex_size * sizeof(int));
+	hardware_res = (int *)malloc(audiohex_size * sizeof(int));
 
 	for (i = 0; i < audiohex_size; i++) //for (i = 0; i < AUDIO_LENGTH; i++)
 	{
@@ -88,8 +89,6 @@ int main(void)
 	}
 
 	fp = fopen("output.txt", "w+");
-
-	hardware_res = (int *)malloc(audiohex_size * sizeof(int));
 
 	rx = (int *)mmap(NULL, audiohex_size,
 					 PROT_READ | PROT_WRITE, MAP_SHARED, rx_proxy_fd, 0);

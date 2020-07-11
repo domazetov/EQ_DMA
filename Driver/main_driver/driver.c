@@ -29,7 +29,8 @@ MODULE_ALIAS("custom:dma controller");
 #define DEVICE_NAME "axi_dma"
 #define DRIVER_NAME "dma_driver"
 #define BUFF_SIZE 20
-#define MAX_PKT_LEN (1024 * 4)
+#define MAX_PKT_LEN 1024 * 4
+#define AUDIO_LEN 1024 * 4 * 5
 
 //*******************FUNCTION PROTOTYPES************************************
 static int axi_dma_probe(struct platform_device *pdev);
@@ -246,7 +247,7 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 		endRead = 0;
 		return 0;
 	}
-	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN * 2, vp->base_addr);
+	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
 
 	value = rx_vir_buffer[0];
 
@@ -300,7 +301,7 @@ static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
 
-	if (length > MAX_PKT_LEN)
+	if (length > AUDIO_LEN)
 	{
 		return -EIO;
 		printk(KERN_ERR "Trying to mmap more space than it's allocated.\n");
@@ -517,7 +518,7 @@ static int __init axi_dma_init(void)
 
 	//printk(KERN_INFO "DMA INIT: Module init done.\n");
 
-	rx_vir_buffer = dma_alloc_coherent(NULL, MAX_PKT_LEN, &rx_phy_buffer, GFP_DMA | GFP_KERNEL);
+	rx_vir_buffer = dma_alloc_coherent(NULL, AUDIO_LEN, &rx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!rx_vir_buffer)
 	{
 		printk(KERN_ALERT "DMA INIT: Could not allocate dma_alloc_coherent for RX");
@@ -525,10 +526,10 @@ static int __init axi_dma_init(void)
 	}
 	else
 		printk("DMA INIT: Successfully allocated memory for dma RX buffer.\n");
-	for (i = 0; i < MAX_PKT_LEN / 4; i++)
+	for (i = 0; i < AUDIO_LEN / 4; i++)
 		rx_vir_buffer[i] = 0x00000000;
 
-	tx_vir_buffer = dma_alloc_coherent(NULL, MAX_PKT_LEN, &tx_phy_buffer, GFP_DMA | GFP_KERNEL);
+	tx_vir_buffer = dma_alloc_coherent(NULL, AUDIO_LEN, &tx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!tx_vir_buffer)
 	{
 		printk(KERN_ALERT "DMA INIT: Could not allocate dma_alloc_coherent for TX");
@@ -536,7 +537,7 @@ static int __init axi_dma_init(void)
 	}
 	else
 		printk("DMA INIT: Successfully allocated memory for dma TX buffer.\n");
-	for (i = 0; i < MAX_PKT_LEN / 4; i++)
+	for (i = 0; i < AUDIO_LEN / 4; i++)
 		tx_vir_buffer[i] = 0x00000000;
 
 	printk(KERN_INFO "DMA INIT: DMA memory reset.\n");
@@ -561,7 +562,7 @@ static void __exit axi_dma_exit(void)
 {
 	//Reset DMA memory
 	int i = 0;
-	for (i = 0; i < MAX_PKT_LEN / 4; i++)
+	for (i = 0; i < AUDIO_LEN / 4; i++)
 	{
 		rx_vir_buffer[i] = 0x00000000;
 		tx_vir_buffer[i] = 0x00000000;
@@ -575,7 +576,8 @@ static void __exit axi_dma_exit(void)
 	device_destroy(dma_class, MKDEV(MAJOR(dma_dev_id), 1));
 	class_destroy(dma_class);
 	unregister_chrdev_region(dma_dev_id, 1);
-	dma_free_coherent(NULL, MAX_PKT_LEN, tx_vir_buffer, tx_phy_buffer);
+	dma_free_coherent(NULL, AUDIO_LEN, rx_vir_buffer, rx_phy_buffer);
+	dma_free_coherent(NULL, AUDIO_LEN, tx_vir_buffer, tx_phy_buffer);
 	printk(KERN_INFO "DMA EXIT: Exit device module finished \"%s\".\n", DEVICE_NAME);
 }
 

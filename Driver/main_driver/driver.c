@@ -279,7 +279,7 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 
 	ret = strcmp(start, buff);
 
-	printk(KERN_INFO "%s %s %d\n", start, buff, ret);
+	//printk(KERN_INFO "%s %s %d\n", start, buff, ret);
 
 	if (!ret)
 	{

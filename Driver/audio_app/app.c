@@ -22,6 +22,7 @@ int main(void)
 	int i, count;
 	unsigned int val;
 	char audiof[8];
+	int audiohex_size = 0;
 
 	int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
 	int *input = (int *)malloc(AUDIO_LENGTH * sizeof(int));
@@ -36,6 +37,12 @@ int main(void)
 		printf("Cannot open input.txt\n");
 		exit(EXIT_FAILURE);
 	}
+
+	fseek(audiohex, 0, SEEK_END);
+	audiohex_size = ftell(f);
+	fseek(audiohex, 0, SEEK_SET);
+	printf("##########%d\n", audiohex_size);
+
 	for (i = 0; i < AUDIO_LENGTH; i++)
 	{
 		fscanf(audiohex, "%x", &input[i]);

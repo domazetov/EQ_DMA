@@ -323,7 +323,7 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 	if (!ret)
 	{
 		printk(KERN_INFO "DMA Write: Started.\n");
-		num_of_wr = NUM_OF_PKT + 1;
+		num_of_wr = NUM_OF_PKT + 2;
 		for (i = 0; i <= NUM_OF_PKT; i++)
 		{
 			tx_dma_simple_write(tx_phy_buffer + i * MAX_PKT_LEN, MAX_PKT_LEN, vp->base_addr);

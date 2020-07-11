@@ -55,10 +55,10 @@ int main(void)
 
 	for (i = 0; i < (NUMBER_OF_AMPLIFICATIONS + NUMBER_OF_BOUNDARIES); i++)
 	{
-		fp = fopen("/dev/eq_in", "w");
+		fp = fopen("/dev/dae", "w");
 		if (fp == NULL)
 		{
-			printf("Cannot open /dev/eq_in for write\n");
+			printf("Cannot open /dev/dae for write\n");
 			exit(EXIT_FAILURE);
 		}
 		if (i < NUMBER_OF_AMPLIFICATIONS)
@@ -68,7 +68,7 @@ int main(void)
 		fclose(fp);
 		if (fp == NULL)
 		{
-			printf("Cannot close /dev/eq_in\n");
+			printf("Cannot close /dev/dae\n");
 			return -1;
 		}
 	}

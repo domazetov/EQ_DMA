@@ -231,7 +231,7 @@ static ssize_t DAE_write(struct file *f, const char __user *buf, size_t length, 
   int ret = 0;
   unsigned int pos = 0;
   unsigned int val = 0;
-  printk("EQ: Write start.\n");
+  printk("DAE: Write start.\n");
   ret = copy_from_user(buff, buf, length);
   if (ret)
   {
@@ -246,14 +246,14 @@ static ssize_t DAE_write(struct file *f, const char __user *buf, size_t length, 
   {
     iowrite32(pos, eq_in->base_addr);
     iowrite32(val, eq_in->base_addr + 8);
-    printk(KERN_INFO "EQ: Writing value: %d at position %d.\n", val, pos);
+    printk(KERN_INFO "DAE: Writing value: %d at position %d.\n", val, pos);
   }
   else
   {
     printk(KERN_WARNING "DAE_write: Wrong write format, expected \"xpos,ypos,rgb\"\n");
     // return -EINVAL;//parsing error
   }
-  printk(KERN_INFO "EQ: Write done.\n");
+  printk(KERN_INFO "DAE: Write done.\n");
   return length;
 }
 
@@ -268,7 +268,7 @@ static ssize_t DAE_read(struct file *f, char __user *buf, size_t length, loff_t 
     endRead = 0;
     return 0;
   }
-  printk("EQ: Read.\n");
+  printk("DAE: Read.\n");
   for (pos = 0; pos < 28; pos++)
   {
     iowrite32(pos, eq_out->base_addr);
@@ -281,11 +281,11 @@ static ssize_t DAE_read(struct file *f, char __user *buf, size_t length, loff_t 
 
   if (ret)
   {
-    printk(KERN_INFO "EQ Read: Copy to user failed.\n");
+    printk(KERN_INFO "DAE Read: Copy to user failed.\n");
     return -EFAULT;
   }
 
-  printk(KERN_INFO "EQ Read done.\n");
+  printk(KERN_INFO "DAE Read done.\n");
   endRead = 1;
   return length;
 }

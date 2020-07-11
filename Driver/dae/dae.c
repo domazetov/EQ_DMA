@@ -185,11 +185,11 @@ static int DAE_probe(struct platform_device *pdev)
 
 static int DAE_remove(struct platform_device *pdev)
 {
+  int pos;
   switch (counter)
   {
 
   case 0: //FIRST
-    int pos;
     for (pos = 0; pos < 19; pos++)
     {
       iowrite32(pos, eq_in->base_addr);

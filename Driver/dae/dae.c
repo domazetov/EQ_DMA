@@ -257,7 +257,7 @@ static ssize_t DAE_write(struct file *f, const char __user *buf, size_t length, 
   return length;
 }
 
-static ssize_t eq_out_read(struct file *f, char __user *buf, size_t length, loff_t *off)
+static ssize_t DAE_read(struct file *f, char __user *buf, size_t length, loff_t *off)
 {
   int ret = 0;
   char buff[BUFF_SIZE];

@@ -29,7 +29,7 @@ MODULE_ALIAS("custom:dma controller");
 #define DEVICE_NAME "axi_dma"
 #define DRIVER_NAME "dma_driver"
 #define BUFF_SIZE 20
-#define MAX_PKT_LEN (1024 * 4 * 2)
+#define MAX_PKT_LEN (1024 * 4)
 
 //*******************FUNCTION PROTOTYPES************************************
 static int axi_dma_probe(struct platform_device *pdev);
@@ -246,7 +246,7 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 		endRead = 0;
 		return 0;
 	}
-	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
+	rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN * 2, vp->base_addr);
 
 	value = rx_vir_buffer[0];
 
@@ -286,6 +286,7 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 		tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
 		printk(KERN_INFO "DMA Write: Started. Size of tx_phy_buffer %d\n", sizeof(tx_phy_buffer));
 		//rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
+		tx_dma_simple_write(tx_phy_buffer + 1024, MAX_PKT_LEN, vp->base_addr);
 	}
 	else
 		printk(KERN_INFO "DMA Write: Wrong command format.\n");

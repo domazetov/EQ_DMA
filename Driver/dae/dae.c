@@ -114,7 +114,7 @@ static int DAE_probe(struct platform_device *pdev)
 
     eq_in->mem_start = r_mem->start;
     eq_in->mem_end = r_mem->end;
-    printk(KERN_INFO "Start address:%x \t end address:%x", r_mem->start, r_mem->end);
+    printk(KERN_INFO "DAE IN: Start address:%x \t end address:%x", r_mem->start, r_mem->end);
 
     if (!request_mem_region(eq_in->mem_start, eq_in->mem_end - eq_in->mem_start + 1, DRIVER_NAME))
     {
@@ -152,7 +152,7 @@ static int DAE_probe(struct platform_device *pdev)
 
     eq_out->mem_start = r_mem->start;
     eq_out->mem_end = r_mem->end;
-    printk(KERN_INFO "Start address:%x \t end address:%x", r_mem->start, r_mem->end);
+    printk(KERN_INFO "DAE OUT: Start address:%x \t end address:%x", r_mem->start, r_mem->end);
 
     if (!request_mem_region(eq_out->mem_start, eq_out->mem_end - eq_out->mem_start + 1, DRIVER_NAME))
     {
@@ -186,33 +186,24 @@ static int DAE_probe(struct platform_device *pdev)
 static int DAE_remove(struct platform_device *pdev)
 {
   int pos;
-  switch (counter)
+  for (pos = 0; pos < 19; pos++)
   {
-
-  case 0: //FIRST
-    for (pos = 0; pos < 19; pos++)
-    {
-      iowrite32(pos, eq_in->base_addr);
-      iowrite32(0, eq_in->base_addr + 8);
-    }
-    printk(KERN_INFO "eq_in_remove: eq_in remove in process");
-    iounmap(eq_in->base_addr);
-    release_mem_region(eq_in->mem_start, eq_in->mem_end - eq_in->mem_start + 1);
-    kfree(eq_in);
-    printk(KERN_INFO "eq_in_remove: eq_in driver removed");
-
-    break;
-
-  case 1: //SECOND
-    iowrite32(0, eq_out->base_addr);
-    printk(KERN_INFO "eq_out_remove: eq_out remove in process");
-    iounmap(eq_out->base_addr);
-    release_mem_region(eq_out->mem_start, eq_out->mem_end - eq_out->mem_start + 1);
-    kfree(eq_out);
-    printk(KERN_INFO "eq_out_remove: eq_out driver removed");
-    counter--;
-    break;
+    iowrite32(pos, eq_in->base_addr);
+    iowrite32(0, eq_in->base_addr + 8);
   }
+  printk(KERN_INFO "DAE Remove: eq_in remove in process");
+  iounmap(eq_in->base_addr);
+  release_mem_region(eq_in->mem_start, eq_in->mem_end - eq_in->mem_start + 1);
+  kfree(eq_in);
+  printk(KERN_INFO "DAE Remove: eq_in driver removed");
+
+  iowrite32(0, eq_out->base_addr);
+  printk(KERN_INFO "DAE Remove: eq_out remove in process");
+  iounmap(eq_out->base_addr);
+  release_mem_region(eq_out->mem_start, eq_out->mem_end - eq_out->mem_start + 1);
+  kfree(eq_out);
+  printk(KERN_INFO "DAE Remove: eq_out driver removed");
+  counter--;
 
   return 0;
 }

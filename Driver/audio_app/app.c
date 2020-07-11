@@ -72,7 +72,9 @@ int main(void)
 			return -1;
 		}
 	}
+	ssize_t size = read(rx_proxy_fd, &end, sizeof(end));
 
+	printf("Finished: %c\n", end);
 	tx_proxy_fd = open("/dev/dma_tx", O_RDWR);
 
 	if (tx_proxy_fd < 1)
@@ -108,9 +110,12 @@ int main(void)
 
 	memcpy(tx, input, audiohex_size * 4);
 	write(tx_proxy_fd, &start, sizeof(start));
+	ssize_t size = read(rx_proxy_fd, &end, sizeof(end));
+
+	printf("Finished: %c\n", end);
 	usleep(200);
 
-	ssize_t size = read(rx_proxy_fd, &end, sizeof(end));
+	size = read(rx_proxy_fd, &end, sizeof(end));
 
 	printf("Finished: %c\n", end);
 

@@ -284,7 +284,8 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 	if (!ret)
 	{
 		tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
-		printk(KERN_INFO "DMA Write: Started.\n");
+		printk(KERN_INFO "DMA Write: Started. Size of tx_phy_buffer %d\n", sizeof(tx_phy_buffer));
+		//rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
 	}
 	else
 		printk(KERN_INFO "DMA Write: Wrong command format.\n");

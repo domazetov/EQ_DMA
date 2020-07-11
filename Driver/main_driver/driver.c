@@ -267,9 +267,7 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 	char buff[BUFF_SIZE];
 	char start[] = "start";
 	int ret = 0;
-	int result;
 
-	long int value = 0;
 	printk("DMA Write.\n");
 	ret = copy_from_user(buff, buf, length);
 	if (ret)

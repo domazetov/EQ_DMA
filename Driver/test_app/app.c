@@ -81,10 +81,11 @@ int main(void)
 
 	memcpy(tx, audio, MAX_PKT_SIZE);
 
-	sprintf(audiof, "0x%x", audio[0]);
-	printf("###############%s###############\n", audiof);
+	//sprintf(audiof, "0x%x", audio[0]);
+	//printf("###############%s###############\n", audiof);
 
-	write(tx_proxy_fd, &audiof, sizeof(audiof));
+	//write(tx_proxy_fd, &audiof, sizeof(audiof));
+	fprintf(tx_proxy_fd, "start");
 
 	//sleep(10);
 	ssize_t size = read(rx_proxy_fd, &val, sizeof(val));

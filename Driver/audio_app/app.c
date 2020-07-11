@@ -6,7 +6,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-#define AUDIO_LENGTH 1024 * 130
+#define AUDIO_LENGTH 1024
 #define PACKAGE_LENGTH 1024
 #define NUMBER_OF_AMPLIFICATIONS 10
 #define NUMBER_OF_BOUNDARIES 18
@@ -24,6 +24,9 @@ int main(void)
 	char audiof[8];
 	int audiohex_size = 0;
 
+	int count_lines = 0;
+	char filechar[40], chr;
+
 	int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
 	int *input = (int *)malloc(AUDIO_LENGTH * sizeof(int));
 
@@ -38,10 +41,23 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	fseek(audiohex, 0, SEEK_END);
-	audiohex_size = ftell(f);
-	fseek(audiohex, 0, SEEK_SET);
-	printf("##########%d\n", audiohex_size);
+	// fseek(audiohex, 0, SEEK_END);
+	// audiohex_size = ftell(audiohex);
+	// fseek(audiohex, 0, SEEK_SET);
+	// printf("##########%d\n", audiohex_size);
+
+	chr = getc(audiohex);
+	while (chr != EOF)
+	{
+		//Count whenever new line is encountered
+		if (chr == 'n')
+		{
+			count_lines = count_lines + 1;
+		}
+		//take next character from file.
+		chr = getc(audiohex);
+	}
+	printf("##########%d\n", count_lines);
 
 	for (i = 0; i < AUDIO_LENGTH; i++)
 	{

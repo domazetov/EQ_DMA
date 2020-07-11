@@ -24,8 +24,8 @@ int main(void)
 	char audiof[8];
 	int audiohex_size = 0;
 
-	int count_lines = 0;
-	char filechar[40], chr;
+	int count = 0;
+	char c;
 
 	int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
 	int *input = (int *)malloc(AUDIO_LENGTH * sizeof(int));
@@ -46,18 +46,11 @@ int main(void)
 	// fseek(audiohex, 0, SEEK_SET);
 	// printf("##########%d\n", audiohex_size);
 
-	chr = getc(audiohex);
-	while (chr != EOF)
-	{
-		//Count whenever new line is encountered
-		if (chr == 'n')
-		{
-			count_lines = count_lines + 1;
-		}
-		//take next character from file.
-		chr = getc(audiohex);
-	}
-	printf("##########%d\n", count_lines);
+	for (c = getc(audiohex); c != EOF; c = getc(audiohex))
+		if (c == '\n') // Increment count if this character is newline
+			count = count + 1;
+
+	printf("##########%d\n", count);
 
 	for (i = 0; i < AUDIO_LENGTH; i++)
 	{

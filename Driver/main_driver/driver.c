@@ -268,6 +268,12 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 	int length;
 	int ret = 0;
 	char buff[BUFF_SIZE];
+	printk("DMA Read.\n");
+	if (endRead)
+	{
+		endRead = 0;
+		return 0;
+	}
 
 	len = scnprintf(buff, BUFF_SIZE, "%c", '1');
 	ret = copy_to_user(buf, buff, len);
@@ -290,6 +296,7 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 		if (ret)
 			return -EFAULT;
 	}
+	endRead = 1;
 	return len;
 }
 

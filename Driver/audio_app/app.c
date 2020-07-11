@@ -20,7 +20,7 @@ int main(void)
 	int *rx;
 	int *tx;
 	int i, count;
-	unsigned int val;
+	char end;
 	char start[] = "start";
 	int audiohex_size = 0;
 
@@ -107,12 +107,13 @@ int main(void)
 	//memcpy(array, input + count * 1024, 1024 * sizeof(int));
 
 	memcpy(tx, input, audiohex_size * 4);
-
 	write(tx_proxy_fd, &start, sizeof(start));
 	usleep(200);
 
-	///ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
-	//size = read(rx_proxy_fd, &val, sizeof(val));
+	ssize_t size = read(rx_proxy_fd, &char, sizeof(char));
+
+	printf("Finished: %c\n", end);
+
 	usleep(200);
 	memcpy(hardware_res, rx, audiohex_size * 4);
 

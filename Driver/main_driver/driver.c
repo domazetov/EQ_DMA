@@ -277,7 +277,7 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 		printk(KERN_INFO "DMA Write: Copy from user failed.\n");
 		return -EFAULT;
 	}
-	//buff[length] = '\0';
+	buff[length - 1] = '\0';
 
 	result = strcmp(start, buff);
 	printk(KERN_INFO "%s\n", buff);

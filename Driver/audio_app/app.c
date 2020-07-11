@@ -21,7 +21,7 @@ int main(void)
 	int *tx;
 	int i, count;
 	unsigned int val;
-	char audiof[8];
+	char start[] = "start";
 	int audiohex_size = 0;
 
 	int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
@@ -41,9 +41,7 @@ int main(void)
 	fseek(audiohex, 0, SEEK_END);
 	audiohex_size = ftell(audiohex);
 	fseek(audiohex, 0, SEEK_SET);
-	printf("##########%d\n", audiohex_size);
-
-	printf("##########%d\n", count);
+	printf("##########%d\n", audiohex_size / 12);
 
 	for (i = 0; i < AUDIO_LENGTH; i++)
 	{
@@ -108,11 +106,7 @@ int main(void)
 
 		memcpy(tx, array, MAX_PKT_SIZE);
 
-		sprintf(audiof, "0x%x", array[0]);
-		//printf("###############%s###############\n", audiof);
-
-		write(tx_proxy_fd, &audiof, sizeof(audiof));
-		write(tx_proxy_fd, &audiof, sizeof(audiof));
+		write(tx_proxy_fd, &start, sizeof(start));
 		usleep(200);
 
 		ssize_t size = read(rx_proxy_fd, &val, sizeof(val));

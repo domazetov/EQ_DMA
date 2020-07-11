@@ -186,6 +186,14 @@ static int DAE_probe(struct platform_device *pdev)
 static int DAE_remove(struct platform_device *pdev)
 {
   int pos;
+
+  iowrite32(0, eq_out->base_addr);
+  printk(KERN_INFO "DAE Remove: eq_out remove in process");
+  iounmap(eq_out->base_addr);
+  release_mem_region(eq_out->mem_start, eq_out->mem_end - eq_out->mem_start + 1);
+  kfree(eq_out);
+  printk(KERN_INFO "DAE Remove: eq_out driver removed");
+
   for (pos = 0; pos < 19; pos++)
   {
     iowrite32(pos, eq_in->base_addr);
@@ -196,15 +204,6 @@ static int DAE_remove(struct platform_device *pdev)
   release_mem_region(eq_in->mem_start, eq_in->mem_end - eq_in->mem_start + 1);
   kfree(eq_in);
   printk(KERN_INFO "DAE Remove: eq_in driver removed");
-
-  iowrite32(0, eq_out->base_addr);
-  printk(KERN_INFO "DAE Remove: eq_out remove in process");
-  iounmap(eq_out->base_addr);
-  release_mem_region(eq_out->mem_start, eq_out->mem_end - eq_out->mem_start + 1);
-  kfree(eq_out);
-  printk(KERN_INFO "DAE Remove: eq_out driver removed");
-  counter--;
-
   return 0;
 }
 

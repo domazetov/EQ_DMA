@@ -30,7 +30,9 @@ MODULE_ALIAS("custom:dma controller");
 #define DRIVER_NAME "dma_driver"
 #define BUFF_SIZE 20
 #define MAX_PKT_LEN 1024 * 4
-#define AUDIO_LEN 1024 * 4 * 5
+#define NUM_OF_PKT 5
+
+int num_of_wr = 0;
 
 //*******************FUNCTION PROTOTYPES************************************
 static int axi_dma_probe(struct platform_device *pdev);
@@ -237,6 +239,7 @@ static int axi_dma_close(struct inode *i, struct file *f)
 
 static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
+	/*
 	int ret = 0;
 	int length = 0;
 	u32 value = 0;
@@ -261,6 +264,17 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 	printk(KERN_INFO "DMA Read: Succesfully read.\n");
 	endRead = 1;
 	return length;
+	*/
+	printk("DMA Read.\n");
+	if (num_of_wr == 1)
+	{
+		return '1';
+	}
+	else
+	{
+		return '0';
+	}
+	return 0;
 }
 
 static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t length, loff_t *off)
@@ -268,6 +282,7 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 	char buff[BUFF_SIZE];
 	char start[] = "start";
 	int ret = 0;
+	int i;
 
 	printk("DMA Write.\n");
 	ret = copy_from_user(buff, buf, length);
@@ -284,13 +299,16 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 
 	if (!ret)
 	{
-		tx_dma_simple_write(tx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
-		udelay(1000);
-		rx_dma_simple_write(rx_phy_buffer, MAX_PKT_LEN, vp->base_addr);
-		udelay(1000);
-		tx_dma_simple_write(tx_phy_buffer + MAX_PKT_LEN, MAX_PKT_LEN, vp->base_addr);
-		udelay(1000);
-		rx_dma_simple_write(rx_phy_buffer + MAX_PKT_LEN, MAX_PKT_LEN, vp->base_addr);
+		printk(KERN_INFO "DMA Write: Started.\n");
+		num_of_wr = NUM_OF_PKT;
+		for (i = 0; i < NUM_OF_PKT; i++)
+		{
+			tx_dma_simple_write(tx_phy_buffer + i * MAX_PKT_LEN, MAX_PKT_LEN, vp->base_addr);
+			udelay(1000);
+			rx_dma_simple_write(rx_phy_buffer + i * MAX_PKT_LEN, MAX_PKT_LEN, vp->base_addr);
+			udelay(1000);
+			num_of_wr--;
+		}
 	}
 	else
 		printk(KERN_INFO "DMA Write: Wrong command format.\n");
@@ -304,7 +322,7 @@ static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 	int ret = 0;
 	long length = vma_s->vm_end - vma_s->vm_start;
 
-	if (length > AUDIO_LEN)
+	if (length > NUM_OF_PKT * MAX_PKT_LEN)
 	{
 		return -EIO;
 		printk(KERN_ERR "Trying to mmap more space than it's allocated.\n");
@@ -521,7 +539,7 @@ static int __init axi_dma_init(void)
 
 	//printk(KERN_INFO "DMA INIT: Module init done.\n");
 
-	rx_vir_buffer = dma_alloc_coherent(NULL, AUDIO_LEN, &rx_phy_buffer, GFP_DMA | GFP_KERNEL);
+	rx_vir_buffer = dma_alloc_coherent(NULL, NUM_OF_PKT * MAX_PKT_LEN, &rx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!rx_vir_buffer)
 	{
 		printk(KERN_ALERT "DMA INIT: Could not allocate dma_alloc_coherent for RX");
@@ -529,10 +547,10 @@ static int __init axi_dma_init(void)
 	}
 	else
 		printk("DMA INIT: Successfully allocated memory for dma RX buffer.\n");
-	for (i = 0; i < AUDIO_LEN / 4; i++)
+	for (i = 0; i < NUM_OF_PKT * MAX_PKT_LEN / 4; i++)
 		rx_vir_buffer[i] = 0x00000000;
 
-	tx_vir_buffer = dma_alloc_coherent(NULL, AUDIO_LEN, &tx_phy_buffer, GFP_DMA | GFP_KERNEL);
+	tx_vir_buffer = dma_alloc_coherent(NULL, NUM_OF_PKT * MAX_PKT_LEN, &tx_phy_buffer, GFP_DMA | GFP_KERNEL);
 	if (!tx_vir_buffer)
 	{
 		printk(KERN_ALERT "DMA INIT: Could not allocate dma_alloc_coherent for TX");
@@ -540,7 +558,7 @@ static int __init axi_dma_init(void)
 	}
 	else
 		printk("DMA INIT: Successfully allocated memory for dma TX buffer.\n");
-	for (i = 0; i < AUDIO_LEN / 4; i++)
+	for (i = 0; i < NUM_OF_PKT * MAX_PKT_LEN / 4; i++)
 		tx_vir_buffer[i] = 0x00000000;
 
 	printk(KERN_INFO "DMA INIT: DMA memory reset.\n");
@@ -565,7 +583,7 @@ static void __exit axi_dma_exit(void)
 {
 	//Reset DMA memory
 	int i = 0;
-	for (i = 0; i < AUDIO_LEN / 4; i++)
+	for (i = 0; i < NUM_OF_PKT * MAX_PKT_LEN / 4; i++)
 	{
 		rx_vir_buffer[i] = 0x00000000;
 		tx_vir_buffer[i] = 0x00000000;
@@ -579,8 +597,8 @@ static void __exit axi_dma_exit(void)
 	device_destroy(dma_class, MKDEV(MAJOR(dma_dev_id), 1));
 	class_destroy(dma_class);
 	unregister_chrdev_region(dma_dev_id, 1);
-	dma_free_coherent(NULL, AUDIO_LEN, rx_vir_buffer, rx_phy_buffer);
-	dma_free_coherent(NULL, AUDIO_LEN, tx_vir_buffer, tx_phy_buffer);
+	dma_free_coherent(NULL, NUM_OF_PKT * MAX_PKT_LEN, rx_vir_buffer, rx_phy_buffer);
+	dma_free_coherent(NULL, NUM_OF_PKT * MAX_PKT_LEN, tx_vir_buffer, tx_phy_buffer);
 	printk(KERN_INFO "DMA EXIT: Exit device module finished \"%s\".\n", DEVICE_NAME);
 }
 

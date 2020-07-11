@@ -90,10 +90,10 @@ int main(void)
 
 	fp = fopen("output.txt", "w+");
 
-	rx = (int *)mmap(NULL, audiohex_size * 4,
+	rx = (int *)mmap(NULL, audiohex_size * 4 * 2,
 					 PROT_READ | PROT_WRITE, MAP_SHARED, rx_proxy_fd, 0);
 
-	tx = (int *)mmap(NULL, audiohex_size * 4,
+	tx = (int *)mmap(NULL, audiohex_size * 4 * 2,
 					 PROT_READ | PROT_WRITE, MAP_SHARED, tx_proxy_fd, 0);
 
 	if ((rx == MAP_FAILED) || (tx == MAP_FAILED))
@@ -106,7 +106,7 @@ int main(void)
 	//{
 	//memcpy(array, input + count * 1024, 1024 * sizeof(int));
 
-	memcpy(tx, input, audiohex_size * 4);
+	memcpy(tx, input, audiohex_size * 4 * 2);
 
 	write(tx_proxy_fd, &start, sizeof(start));
 	usleep(200);
@@ -114,7 +114,7 @@ int main(void)
 	ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
 	size = read(rx_proxy_fd, &val, sizeof(val));
 	usleep(200);
-	memcpy(hardware_res, rx, audiohex_size * 4);
+	memcpy(hardware_res, rx, audiohex_size * 4 * 2);
 
 	for (i = 0; i < audiohex_size; i++)
 	{
@@ -122,8 +122,8 @@ int main(void)
 	}
 	//}
 
-	munmap(tx, audiohex_size * 4);
-	munmap(rx, audiohex_size * 4);
+	munmap(tx, audiohex_size * 4 * 2);
+	munmap(rx, audiohex_size * 4 * 2);
 	fclose(fp);
 	close(tx_proxy_fd);
 	close(rx_proxy_fd);

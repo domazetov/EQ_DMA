@@ -106,7 +106,7 @@ int main(void)
 	//{
 	//memcpy(array, input + count * 1024, 1024 * sizeof(int));
 
-	memcpy(tx, input, audiohex_size);
+	memcpy(tx, input, audiohex_size * 4);
 
 	write(tx_proxy_fd, &start, sizeof(start));
 	usleep(200);
@@ -114,7 +114,7 @@ int main(void)
 	ssize_t size = read(rx_proxy_fd, &val, sizeof(val));
 	size = read(rx_proxy_fd, &val, sizeof(val));
 	usleep(200);
-	memcpy(hardware_res, rx, audiohex_size);
+	memcpy(hardware_res, rx, audiohex_size * 4);
 
 	for (i = 0; i < audiohex_size; i++)
 	{
@@ -122,8 +122,8 @@ int main(void)
 	}
 	//}
 
-	munmap(tx, MAX_PKT_SIZE);
-	munmap(rx, MAX_PKT_SIZE);
+	munmap(tx, audiohex_size * 4);
+	munmap(rx, audiohex_size * 4);
 	fclose(fp);
 	close(tx_proxy_fd);
 	close(rx_proxy_fd);

@@ -24,9 +24,6 @@ int main(void)
 	char audiof[8];
 	int audiohex_size = 0;
 
-	int countt = 0;
-	char c;
-
 	int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
 	int *input = (int *)malloc(AUDIO_LENGTH * sizeof(int));
 
@@ -41,14 +38,10 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	// fseek(audiohex, 0, SEEK_END);
-	// audiohex_size = ftell(audiohex);
-	// fseek(audiohex, 0, SEEK_SET);
-	// printf("##########%d\n", audiohex_size);
-
-	for (c = getc(audiohex); c != EOF; c = getc(audiohex))
-		if (c == '\n') // Increment count if this character is newline
-			countt = countt + 1;
+	fseek(audiohex, 0, SEEK_END);
+	audiohex_size = ftell(audiohex);
+	fseek(audiohex, 0, SEEK_SET);
+	printf("##########%d\n", audiohex_size);
 
 	printf("##########%d\n", count);
 

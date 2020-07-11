@@ -265,7 +265,6 @@ static ssize_t axi_dma_read(struct file *f, char __user *buf, size_t len, loff_t
 	endRead = 1;
 	return length;
 	*/
-	int length;
 	int ret = 0;
 	char buff[BUFF_SIZE];
 	printk("DMA Read.\n");

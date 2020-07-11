@@ -110,7 +110,7 @@ int main(void)
 	write(tx_proxy_fd, &start, sizeof(start));
 	usleep(200);
 
-	ssize_t size = read(rx_proxy_fd, &char, sizeof(char));
+	ssize_t size = read(rx_proxy_fd, &end, sizeof(end));
 
 	printf("Finished: %c\n", end);
 

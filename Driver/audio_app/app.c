@@ -6,8 +6,8 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-//#define AUDIO_LENGTH 1024
-//#define PACKAGE_LENGTH 1024
+#define PACKAGE_NUMBER 1292
+#define PACKAGE_LENGTH 1024
 //#define MAX_PKT_SIZE 1024 * 4
 #define NUMBER_OF_AMPLIFICATIONS 10
 #define NUMBER_OF_BOUNDARIES 18
@@ -16,16 +16,17 @@ int main(void)
 {
 	FILE *dae;
 	FILE *audiohex;
+	FILE *out;
 	int rx_fd, tx_fd;
 	int *rx_mmap;
 	int *tx_mmap;
-	int i, count;
+	unsigned int i, count;
 	char end;
 	char start[] = "start";
-	int audiohex_size = 0;
+	unsigned int audiohex_size = 0;
 	ssize_t read_end;
 
-	//int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
+	int *pkg = (int *)malloc(PACKAGE_NUMBER * PACKAGE_LENGTH * sizeof(int));
 
 	unsigned int *hardware_res;
 	int *input;
@@ -89,7 +90,7 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	dae = fopen("output.txt", "w+");
+	out = fopen("output.txt", "w+");
 
 	rx_mmap = (int *)mmap(NULL, audiohex_size * 4,
 						  PROT_READ | PROT_WRITE, MAP_SHARED, rx_fd, 0);
@@ -103,30 +104,35 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	memcpy(tx_mmap, input, audiohex_size * 4);
-	write(tx_fd, &start, sizeof(start));
-
-	usleep(200);
-
-	read_end = read(rx_fd, &end, sizeof(end));
-	while (end != '1')
+	for (count = 0; count < audiohex_size; count = count + (PACKAGE_NUMBER * PACKAGE_LENGTH))
 	{
+		memcpy(pkg, input + count, PACKAGE_NUMBER * PACKAGE_LENGTH * sizeof(int));
+
+		memcpy(tx_mmap, pkg, audiohex_size * 4);
+		write(tx_fd, &start, sizeof(start));
+
+		usleep(200);
+
 		read_end = read(rx_fd, &end, sizeof(end));
+		while (end != '1')
+		{
+			read_end = read(rx_fd, &end, sizeof(end));
+			usleep(2000);
+		}
+		printf("Equalizing completed: %c\n", end);
+
 		usleep(2000);
-	}
-	printf("Equalizing completed: %c\n", end);
+		memcpy(hardware_res, rx_mmap, audiohex_size * 4);
 
-	usleep(200);
-	memcpy(hardware_res, rx_mmap, audiohex_size * 4);
-
-	for (i = 0; i < audiohex_size; i++)
-	{
-		fprintf(dae, "%#0010x\n", hardware_res[i]);
+		for (i = 0; i < audiohex_size; i++)
+		{
+			fprintf(out, "%#0010x\n", hardware_res[i]);
+		}
 	}
 
 	munmap(tx_mmap, audiohex_size * 4);
 	munmap(rx_mmap, audiohex_size * 4);
-	fclose(dae);
+	fclose(out);
 	close(tx_fd);
 	close(rx_fd);
 

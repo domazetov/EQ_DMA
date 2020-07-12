@@ -25,6 +25,7 @@ DMA.png
 app
 *.pdf
 *.wav
+*.mp3
 *.o
 *.cmd
 *.mod.c

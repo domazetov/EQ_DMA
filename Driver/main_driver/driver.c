@@ -30,9 +30,10 @@ MODULE_ALIAS("custom:dma controller");
 #define DRIVER_NAME "dma_driver"
 #define BUFF_SIZE 20
 #define MAX_PKT_LEN 1024 * 4
-#define NUM_OF_PKT 130
+#define NUM_OF_PKT 7752 //3min
 
 int num_of_wr = 0;
+int endRead = 0;
 
 //*******************FUNCTION PROTOTYPES************************************
 static int axi_dma_probe(struct platform_device *pdev);
@@ -103,7 +104,6 @@ u32 *tx_vir_buffer;
 dma_addr_t rx_phy_buffer;
 u32 *rx_vir_buffer;
 
-int endRead = 0;
 //***************************************************************************
 // PROBE AND REMOVE
 
@@ -349,6 +349,9 @@ static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 		return -EIO;
 		printk(KERN_ERR "Trying to mmap more space than it's allocated.\n");
 	}
+
+	printk(KERN_INFO "MMAP length %ld\n", length);
+
 	switch (minor)
 	{
 	case 0: //dma_rx

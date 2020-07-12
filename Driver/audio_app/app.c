@@ -14,15 +14,16 @@
 
 int main(void)
 {
-	FILE *fp;
+	FILE *dae;
 	FILE *audiohex;
-	int rx_proxy_fd, tx_proxy_fd;
-	int *rx;
-	int *tx;
+	int rx_fd, tx_fd;
+	int *rx_mmap;
+	int *tx_mmap;
 	int i, count;
 	char end;
 	char start[] = "start";
 	int audiohex_size = 0;
+	ssize_t read_end;
 
 	//int *array = (int *)malloc(PACKAGE_LENGTH * sizeof(int));
 
@@ -55,84 +56,79 @@ int main(void)
 
 	for (i = 0; i < (NUMBER_OF_AMPLIFICATIONS + NUMBER_OF_BOUNDARIES); i++)
 	{
-		fp = fopen("/dev/dae", "w");
-		if (fp == NULL)
+		dae = fopen("/dev/dae", "w");
+		if (dae == NULL)
 		{
 			printf("Cannot open /dev/dae for write\n");
 			exit(EXIT_FAILURE);
 		}
 		if (i < NUMBER_OF_AMPLIFICATIONS)
-			fprintf(fp, "%d,%d\n", i, p[i]);
+			fprintf(dae, "%d,%d\n", i, p[i]);
 		else
-			fprintf(fp, "%d,%d\n", i, pr[i - 10]);
-		fclose(fp);
-		if (fp == NULL)
+			fprintf(dae, "%d,%d\n", i, pr[i - 10]);
+		fclose(dae);
+		if (dae == NULL)
 		{
 			printf("Cannot close /dev/dae\n");
 			return -1;
 		}
 	}
 
-	tx_proxy_fd = open("/dev/dma_tx", O_RDWR);
+	tx_fd = open("/dev/dma_tx", O_RDWR);
 
-	if (tx_proxy_fd < 1)
+	if (tx_fd < 1)
 	{
 		printf("Unable to open DMA MM2S");
 		exit(EXIT_FAILURE);
 	}
 
-	rx_proxy_fd = open("/dev/dma_rx", O_RDWR);
-	if (rx_proxy_fd < 1)
+	rx_fd = open("/dev/dma_rx", O_RDWR);
+	if (rx_fd < 1)
 	{
 		printf("Unable to open DMA S2MM");
 		exit(EXIT_FAILURE);
 	}
 
-	fp = fopen("output.txt", "w+");
+	dae = fopen("output.txt", "w+");
 
-	rx = (int *)mmap(NULL, audiohex_size * 4,
-					 PROT_READ | PROT_WRITE, MAP_SHARED, rx_proxy_fd, 0);
+	rx_mmap = (int *)mmap(NULL, audiohex_size * 4,
+						  PROT_READ | PROT_WRITE, MAP_SHARED, rx_fd, 0);
 
-	tx = (int *)mmap(NULL, audiohex_size * 4,
-					 PROT_READ | PROT_WRITE, MAP_SHARED, tx_proxy_fd, 0);
+	tx_mmap = (int *)mmap(NULL, audiohex_size * 4,
+						  PROT_READ | PROT_WRITE, MAP_SHARED, tx_fd, 0);
 
-	if ((rx == MAP_FAILED) || (tx == MAP_FAILED))
+	if ((rx_mmap == MAP_FAILED) || (tx_mmap == MAP_FAILED))
 	{
 		printf("Failed to mmap\n");
 		exit(EXIT_FAILURE);
 	}
 
-	//for (count = 0; count < AUDIO_LENGTH / PACKAGE_LENGTH; count++)
-	//{
-	//memcpy(array, input + count * 1024, 1024 * sizeof(int));
-
-	memcpy(tx, input, audiohex_size * 4);
-	write(tx_proxy_fd, &start, sizeof(start));
+	memcpy(tx_mmap, input, audiohex_size * 4);
+	write(tx_fd, &start, sizeof(start));
 
 	usleep(200);
 
-	ssize_t size = read(rx_proxy_fd, &end, sizeof(end));
+	read_end = read(rx_fd, &end, sizeof(end));
 	while (end != '1')
 	{
-		size = read(rx_proxy_fd, &end, sizeof(end));
+		read_end = read(rx_fd, &end, sizeof(end));
 		usleep(2000);
 	}
 	printf("Equalizing completed: %c\n", end);
 
 	usleep(200);
-	memcpy(hardware_res, rx, audiohex_size * 4);
+	memcpy(hardware_res, rx_mmap, audiohex_size * 4);
 
 	for (i = 0; i < audiohex_size; i++)
 	{
-		fprintf(fp, "%#0010x\n", hardware_res[i]);
+		fprintf(dae, "%#0010x\n", hardware_res[i]);
 	}
-	//}
 
-	munmap(tx, audiohex_size * 4);
-	munmap(rx, audiohex_size * 4);
-	fclose(fp);
-	close(tx_proxy_fd);
-	close(rx_proxy_fd);
+	munmap(tx_mmap, audiohex_size * 4);
+	munmap(rx_mmap, audiohex_size * 4);
+	fclose(dae);
+	close(tx_fd);
+	close(rx_fd);
 
 	return 0;
 }

@@ -95,9 +95,9 @@ int main(void)
 
 	if (audiohex_size > (PACKAGE_NUMBER * PACKAGE_LENGTH))
 	{
-		package = audiohex_size - (PACKAGE_NUMBER * PACKAGE_LENGTH);
+		package = audiohex_size;
 		count++;
-		if (package > (PACKAGE_NUMBER * PACKAGE_LENGTH))
+		if ((package - (PACKAGE_NUMBER * PACKAGE_LENGTH)) > (PACKAGE_NUMBER * PACKAGE_LENGTH))
 		{
 			package = package - (PACKAGE_NUMBER * PACKAGE_LENGTH);
 			count++;

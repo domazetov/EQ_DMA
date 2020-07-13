@@ -44,6 +44,8 @@ MSREAL/Converter/testing/
 MSREAL/audio_app/output.txt
 MSREAL/audio_app/input.txt
 MSREAL/audio_app/old
+MSREAL/old
+MSREAL/test_app
 output1.txt
 project_3
 app_dma_probeOLD

@@ -43,7 +43,7 @@ MSREAL/Converter/outputdouble.txt
 MSREAL/Converter/testing/
 MSREAL/audio_app/output.txt
 MSREAL/audio_app/input.txt
-MSREAL/audio_app/old
+MSREAL/audio_app/pscp.txt
 MSREAL/old
 MSREAL/test_app
 output1.txt

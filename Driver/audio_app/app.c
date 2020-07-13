@@ -24,6 +24,7 @@ int main(void)
 	char end;
 	char start[] = "start";
 	unsigned int audiohex_size = 0;
+	unsigned int package = 0;
 	ssize_t read_end;
 
 	int *pkg = (int *)malloc(PACKAGE_NUMBER * PACKAGE_LENGTH * sizeof(int));
@@ -92,6 +93,16 @@ int main(void)
 
 	out = fopen("output.txt", "w+");
 
+	if (audiohex_size > (PACKAGE_NUMBER * PACKAGE_LENGTH))
+	{
+		package = audiohex_size - (PACKAGE_NUMBER * PACKAGE_LENGTH);
+		if (package > (PACKAGE_NUMBER * PACKAGE_LENGTH))
+		{
+			package = package - (PACKAGE_NUMBER * PACKAGE_LENGTH);
+			count++;
+		}
+		printf("count: %d\n", count);
+		/*
 	rx_mmap = (int *)mmap(NULL, audiohex_size * 4,
 						  PROT_READ | PROT_WRITE, MAP_SHARED, rx_fd, 0);
 
@@ -130,11 +141,12 @@ int main(void)
 		}
 	}
 
-	munmap(tx_mmap, audiohex_size * 4);
+		munmap(tx_mmap, audiohex_size * 4);
 	munmap(rx_mmap, audiohex_size * 4);
+	*/
+	}
 	fclose(out);
 	close(tx_fd);
 	close(rx_fd);
-
 	return 0;
 }

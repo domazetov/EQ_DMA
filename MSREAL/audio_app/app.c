@@ -137,9 +137,9 @@ int main(void)
 
 		// for (count = 0; count < audiohex_size; count = count + (PACKAGE_NUMBER * PACKAGE_LENGTH))
 		// {
-		memcpy(pkg, input + k, PACKAGE_NUMBER * PACKAGE_LENGTH * sizeof(int));
+		//memcpy(pkg, input + k * (PACKAGE_NUMBER * PACKAGE_LENGTH), PACKAGE_NUMBER * PACKAGE_LENGTH * sizeof(int));
 
-		memcpy(tx_mmap, pkg, countbuffer[k] * 4);
+		memcpy(tx_mmap, input + k * (PACKAGE_NUMBER * PACKAGE_LENGTH), countbuffer[k] * 4);
 		write(tx_fd, &start, sizeof(start));
 
 		usleep(200);

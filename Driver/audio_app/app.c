@@ -37,7 +37,7 @@ int main(void)
 	audiohex = fopen("input.txt", "r");
 	if (audiohex == NULL)
 	{
-		printf("Cannot open input.txt\n");
+		printf("Unable to open input.txt\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -80,19 +80,25 @@ int main(void)
 
 	if (tx_fd < 1)
 	{
-		printf("Unable to open DMA MM2S");
+		printf("Unable to open DMA MM2S!\n");
 		exit(EXIT_FAILURE);
 	}
 
 	rx_fd = open("/dev/dma_rx", O_RDWR);
 	if (rx_fd < 1)
 	{
-		printf("Unable to open DMA S2MM");
+		printf("Unable to open DMA S2MM!\n");
 		exit(EXIT_FAILURE);
 	}
 
 	out = fopen("output.txt", "w+");
+	if (out < 1)
+	{
+		printf("Unable to output.txt\n");
+		exit(EXIT_FAILURE);
+	}
 
+	printf("Checking input size:\n");
 	if (audiohex_size >= (PACKAGE_LENGTH * PACKAGE_NUMBER))
 	{
 		package = audiohex_size;

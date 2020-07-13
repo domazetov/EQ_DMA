@@ -99,7 +99,6 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	printf("Checking input size:\n");
 	if (audiohex_size >= (PACKAGE_LENGTH * PACKAGE_NUMBER))
 	{
 		package = audiohex_size;
@@ -151,7 +150,7 @@ int main(void)
 			read_end = read(rx_fd, &end, sizeof(end));
 			usleep(2000);
 		}
-		printf("Equalizing completed package %d.\n", k);
+		printf("Equalizing completed for package %d.\n", k + 1);
 
 		//usleep(2000);
 		memcpy(hardware_res, rx_mmap, countbuffer[k] * 4);

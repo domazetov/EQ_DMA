@@ -3,7 +3,7 @@ clear all;
 [data, fs] = audioread('B.mp3','double');
 data(:,2) = [];
 
-x=data(1:1024*1294);
+x=data(1:1024*1292);
 N_fft = 1024;
 
 % for ii = 0:129

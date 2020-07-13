@@ -26,6 +26,7 @@ int main(void)
 	unsigned int audiohex_size = 0;
 	unsigned int package = 0;
 	ssize_t read_end;
+	int countbuffer[10];
 
 	int *pkg = (int *)malloc(PACKAGE_NUMBER * PACKAGE_LENGTH * sizeof(int));
 
@@ -112,7 +113,6 @@ int main(void)
 		}
 		printf("count: %d\n", count);
 	}
-	int countbuffer[count];
 	package = audiohex_size;
 
 	for (k = 0; k < count; i++)

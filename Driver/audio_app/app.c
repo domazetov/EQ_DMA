@@ -92,7 +92,7 @@ int main(void)
 	}
 
 	out = fopen("output.txt", "w+");
-	if (out < 1)
+	if (out == NULL)
 	{
 		printf("Unable to output.txt\n");
 		exit(EXIT_FAILURE);

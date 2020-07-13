@@ -3,7 +3,7 @@ clear all;
 [data, fs] = audioread('B.mp3','double');
 data(:,2) = [];
 
-x=data(1:1024*1292);
+x=data(1:1024*1294);
 N_fft = 1024;
 
 % for ii = 0:129
@@ -36,25 +36,25 @@ amps = 10 .^ ((amps) / 40);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% fileID = fopen('amps.txt','w');
-% fprintf(fileID,'%.7g\n',amps);
-% fclose(fileID);
+fileID = fopen('amps.txt','w');
+fprintf(fileID,'%.7g\n',amps);
+fclose(fileID);
+
+%freq = freq * 100;
+
+fileID = fopen('freq.txt','w');
+fprintf(fileID,'%d\n',freq);
+fclose(fileID);
 % 
-% %freq = freq * 100;
-% 
-% fileID = fopen('freq.txt','w');
-% fprintf(fileID,'%d\n',freq);
-% fclose(fileID);
-% % 
-% fileID = fopen('audiodouble.txt','w');
-% fprintf(fileID,'%.7g\n',x);
-% fclose(fileID);
+fileID = fopen('audiodouble.txt','w');
+fprintf(fileID,'%.7g\n',x);
+fclose(fileID);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-f = fopen('outputdouble.txt');
-datay = textscan(f,'%s');
-fclose(f);
-y = str2double(datay{1}(1:1:end));
-audiowrite('izlaz.wav',y,fs);
+% f = fopen('outputdouble.txt');
+% datay = textscan(f,'%s');
+% fclose(f);
+% y = str2double(datay{1}(1:1:end));
+% audiowrite('izlaz.wav',y,fs);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 

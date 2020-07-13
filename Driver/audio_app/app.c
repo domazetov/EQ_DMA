@@ -111,18 +111,15 @@ int main(void)
 				count++;
 			} while (package > (PACKAGE_LENGTH * PACKAGE_NUMBER));
 		}
-		printf("count: %d\n", count);
+		printf("Number of packages: %d\n", count + 1);
 	}
 	package = audiohex_size;
-	printf("x1\n");
 	for (k = 0; k < count; k++)
 	{
 		package = package - (PACKAGE_LENGTH * PACKAGE_NUMBER);
 		countbuffer[k] = (PACKAGE_LENGTH * PACKAGE_NUMBER);
-		printf("%d\n", k);
 	}
 	countbuffer[count] = package;
-	printf("x2\n");
 	for (k = 0; k < count + 1; k++)
 	{
 		printf("countbuff %d\n", countbuffer[k]);
@@ -158,9 +155,9 @@ int main(void)
 			read_end = read(rx_fd, &end, sizeof(end));
 			usleep(2000);
 		}
-		printf("Equalizing completed: %c\n", end);
+		printf("Equalizing completed package %d.\n", k);
 
-		usleep(2000);
+		//usleep(2000);
 		memcpy(hardware_res, rx_mmap, countbuffer[k] * 4);
 
 		for (i = 0; i < countbuffer[k]; i++)
@@ -173,6 +170,7 @@ int main(void)
 		munmap(rx_mmap, countbuffer[k] * 4);
 		usleep(1000);
 	}
+	printf("Equalizer done!\n");
 	fclose(out);
 	close(tx_fd);
 	close(rx_fd);

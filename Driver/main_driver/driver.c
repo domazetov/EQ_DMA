@@ -351,7 +351,7 @@ static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 		printk(KERN_ERR "Trying to mmap more space than it's allocated.\n");
 	}
 	mmap_length = length;
-	printk(KERN_INFO "MMAP length %ld\n", mmap_length);
+	printk(KERN_INFO "MMAP length %d\n", mmap_length);
 
 	switch (minor)
 	{

@@ -34,6 +34,7 @@ MODULE_ALIAS("custom:dma controller");
 
 int num_of_wr = 0;
 int endRead = 0;
+unsigned int mmap_length = 0;
 
 //*******************FUNCTION PROTOTYPES************************************
 static int axi_dma_probe(struct platform_device *pdev);
@@ -349,8 +350,8 @@ static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 		return -EIO;
 		printk(KERN_ERR "Trying to mmap more space than it's allocated.\n");
 	}
-
-	printk(KERN_INFO "MMAP length %ld\n", length);
+	mmap_length = length;
+	printk(KERN_INFO "MMAP length %ld\n", mmap_length);
 
 	switch (minor)
 	{

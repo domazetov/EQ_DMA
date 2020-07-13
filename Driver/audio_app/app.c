@@ -115,7 +115,7 @@ int main(void)
 	}
 	package = audiohex_size;
 	printf("x1\n");
-	for (k = 0; k < count; i++)
+	for (k = 0; k < count; k++)
 	{
 		package = package - (PACKAGE_LENGTH * PACKAGE_NUMBER);
 		countbuffer[k] = (PACKAGE_LENGTH * PACKAGE_NUMBER);

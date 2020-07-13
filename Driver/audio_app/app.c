@@ -120,10 +120,6 @@ int main(void)
 		countbuffer[k] = (PACKAGE_LENGTH * PACKAGE_NUMBER);
 	}
 	countbuffer[count] = package;
-	for (k = 0; k < count + 1; k++)
-	{
-		printf("countbuff %d\n", countbuffer[k]);
-	}
 
 	for (k = 0; k < count + 1; k++)
 	{

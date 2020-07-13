@@ -323,8 +323,8 @@ static ssize_t axi_dma_write(struct file *f, const char __user *buf, size_t leng
 	if (!ret)
 	{
 		printk(KERN_INFO "DMA Write: Started.\n");
-		num_of_wr = NUM_OF_PKT + 2;
-		for (i = 0; i <= NUM_OF_PKT; i++)
+		num_of_wr = (mmap_length / 4096) + 2;
+		for (i = 0; i <= (mmap_length / 4096); i++)
 		{
 			tx_dma_simple_write(tx_phy_buffer + i * MAX_PKT_LEN, MAX_PKT_LEN, vp->base_addr);
 			udelay(2000);
@@ -351,7 +351,7 @@ static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 		printk(KERN_ERR "Trying to mmap more space than it's allocated.\n");
 	}
 	mmap_length = length;
-	printk(KERN_INFO "MMAP length %d\n", mmap_length);
+	printk(KERN_INFO "MMAP requested length: %d\n", mmap_length);
 
 	switch (minor)
 	{
@@ -375,7 +375,7 @@ static ssize_t dma_mmap(struct file *f, struct vm_area_struct *vma_s)
 		return ret;
 	}
 
-	printk(KERN_INFO "MMAP done, length: %ld.\n", length);
+	printk(KERN_INFO "MMAP completed.\n");
 	return 0;
 }
 

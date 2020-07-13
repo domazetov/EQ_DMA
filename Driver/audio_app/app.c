@@ -119,7 +119,7 @@ int main(void)
 	{
 		package = package - (PACKAGE_LENGTH * PACKAGE_NUMBER);
 		countbuffer[k] = (PACKAGE_LENGTH * PACKAGE_NUMBER);
-		print("%d\n", k);
+		printf("%d\n", k);
 	}
 	countbuffer[count] = package;
 	printf("x2\n");

@@ -30,7 +30,7 @@ MODULE_ALIAS("custom:dma controller");
 #define DRIVER_NAME "dma_driver"
 #define BUFF_SIZE 20
 #define MAX_PKT_LEN 1024 * 4
-#define NUM_OF_PKT 7752 //3min
+#define NUM_OF_PKT 1292 //3min
 
 int num_of_wr = 0;
 int endRead = 0;

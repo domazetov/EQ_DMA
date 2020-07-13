@@ -20,7 +20,7 @@ int main(void)
 	int rx_fd, tx_fd;
 	int *rx_mmap;
 	int *tx_mmap;
-	unsigned int i, count;
+	unsigned int i, count, k;
 	char end;
 	char start[] = "start";
 	unsigned int audiohex_size = 0;
@@ -93,34 +93,53 @@ int main(void)
 
 	out = fopen("output.txt", "w+");
 
-	if (audiohex_size > (PACKAGE_NUMBER * PACKAGE_LENGTH))
+	if (audiohex_size >= (PACKAGE_LENGTH * PACKAGE_NUMBER))
 	{
 		package = audiohex_size;
-		count++;
-		if ((package - (PACKAGE_NUMBER * PACKAGE_LENGTH)) > (PACKAGE_NUMBER * PACKAGE_LENGTH))
+		if (package > (PACKAGE_LENGTH * PACKAGE_NUMBER))
 		{
-			package = package - (PACKAGE_NUMBER * PACKAGE_LENGTH);
-			count++;
+			do
+			{
+				package = package - (PACKAGE_LENGTH * PACKAGE_NUMBER);
+				count++;
+			} while (package > (PACKAGE_LENGTH * PACKAGE_NUMBER));
 		}
 		printf("count: %d\n", count);
-		/*
-	rx_mmap = (int *)mmap(NULL, audiohex_size * 4,
-						  PROT_READ | PROT_WRITE, MAP_SHARED, rx_fd, 0);
+	}
+	int countbuffer[count];
+	package = audiohex_size;
 
-	tx_mmap = (int *)mmap(NULL, audiohex_size * 4,
-						  PROT_READ | PROT_WRITE, MAP_SHARED, tx_fd, 0);
-
-	if ((rx_mmap == MAP_FAILED) || (tx_mmap == MAP_FAILED))
+	for (k = 0; k < count; i++)
 	{
-		printf("Failed to mmap\n");
-		exit(EXIT_FAILURE);
+		package = package - (PACKAGE_LENGTH * PACKAGE_NUMBER);
+		countbuffer[k] = (PACKAGE_LENGTH * PACKAGE_NUMBER);
+	}
+	countbuffer[count] = package;
+	for (k = 0; k < count + 1; k++)
+	{
+		printf("countbuff %d\n", countbuffer[k]);
 	}
 
-	for (count = 0; count < audiohex_size; count = count + (PACKAGE_NUMBER * PACKAGE_LENGTH))
+	for (k = 0; k < count + 1; k++)
 	{
-		memcpy(pkg, input + count, PACKAGE_NUMBER * PACKAGE_LENGTH * sizeof(int));
 
-		memcpy(tx_mmap, pkg, audiohex_size * 4);
+		rx_mmap = (int *)mmap(NULL, countbuffer[k] * 4,
+							  PROT_READ | PROT_WRITE, MAP_SHARED, rx_fd, 0);
+
+		tx_mmap = (int *)mmap(NULL, countbuffer[k] * 4,
+							  PROT_READ | PROT_WRITE, MAP_SHARED, tx_fd, 0);
+
+		if ((rx_mmap == MAP_FAILED) || (tx_mmap == MAP_FAILED))
+		{
+			printf("Failed to mmap\n");
+			exit(EXIT_FAILURE);
+		}
+
+		// for (count = 0; count < audiohex_size; count = count + (PACKAGE_NUMBER * PACKAGE_LENGTH))
+		// {
+		memcpy(pkg, input + k, PACKAGE_NUMBER * PACKAGE_LENGTH * sizeof(int));
+
+		memcpy(tx_mmap, pkg, countbuffer[k] * 4);
 		write(tx_fd, &start, sizeof(start));
 
 		usleep(200);
@@ -134,17 +153,17 @@ int main(void)
 		printf("Equalizing completed: %c\n", end);
 
 		usleep(2000);
-		memcpy(hardware_res, rx_mmap, audiohex_size * 4);
+		memcpy(hardware_res, rx_mmap, countbuffer[k] * 4);
 
-		for (i = 0; i < audiohex_size; i++)
+		for (i = 0; i < countbuffer[k]; i++)
 		{
 			fprintf(out, "%#0010x\n", hardware_res[i]);
 		}
-	}
+		//}
 
-		munmap(tx_mmap, audiohex_size * 4);
-	munmap(rx_mmap, audiohex_size * 4);
-	*/
+		munmap(tx_mmap, countbuffer[k] * 4);
+		munmap(rx_mmap, countbuffer[k] * 4);
+		usleep(1000);
 	}
 	fclose(out);
 	close(tx_fd);

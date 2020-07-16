@@ -1,9 +1,9 @@
 clc;
 clear all;
-[data, fs] = audioread('10.wav','double');
+[data, fs] = audioread('B.mp3','double');
 data(:,2) = [];
 
-x=data(1:1024*247);
+x=data(1:1024*1292*2);
 N_fft = 1024;
 
 % for ii = 0:129

@@ -8,7 +8,6 @@
 
 #define PACKAGE_NUMBER 1292
 #define PACKAGE_LENGTH 1024
-//#define MAX_PKT_SIZE 1024 * 4
 #define NUMBER_OF_AMPLIFICATIONS 10
 #define NUMBER_OF_BOUNDARIES 18
 
@@ -27,8 +26,6 @@ int main(void)
 	unsigned int package = 0;
 	ssize_t read_end;
 	int countbuffer[10];
-
-	int *pkg = (int *)malloc(PACKAGE_NUMBER * PACKAGE_LENGTH * sizeof(int));
 
 	unsigned int *hardware_res;
 	int *input;
@@ -51,7 +48,7 @@ int main(void)
 	input = (int *)malloc(audiohex_size * sizeof(int));
 	hardware_res = (int *)malloc(audiohex_size * sizeof(int));
 
-	for (i = 0; i < audiohex_size; i++) //for (i = 0; i < AUDIO_LENGTH; i++)
+	for (i = 0; i < audiohex_size; i++)
 	{
 		fscanf(audiohex, "%x", &input[i]);
 	}
@@ -135,10 +132,6 @@ int main(void)
 			exit(EXIT_FAILURE);
 		}
 
-		// for (count = 0; count < audiohex_size; count = count + (PACKAGE_NUMBER * PACKAGE_LENGTH))
-		// {
-		//memcpy(pkg, input + k * (PACKAGE_NUMBER * PACKAGE_LENGTH), PACKAGE_NUMBER * PACKAGE_LENGTH * sizeof(int));
-
 		memcpy(tx_mmap, input + k * (PACKAGE_NUMBER * PACKAGE_LENGTH), countbuffer[k] * 4);
 		write(tx_fd, &start, sizeof(start));
 
@@ -159,7 +152,6 @@ int main(void)
 		{
 			fprintf(out, "%#0010x\n", hardware_res[i]);
 		}
-		//}
 
 		munmap(tx_mmap, countbuffer[k] * 4);
 		munmap(rx_mmap, countbuffer[k] * 4);
